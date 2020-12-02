@@ -1,0 +1,4 @@
+job/*
+build/*
+out/*
+.vscode/*
