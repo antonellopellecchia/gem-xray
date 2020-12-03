@@ -67,8 +67,7 @@ set(EXAMPLEB1_SCRIPTS
   run2.mac
   run.mac
   vis.mac
-  source_spectrum.csv
-  source_angular_dist.csv
+  xray-spectrum.csv
   )
 
 foreach(_script ${EXAMPLEB1_SCRIPTS})

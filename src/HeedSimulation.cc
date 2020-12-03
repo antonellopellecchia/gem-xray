@@ -76,5 +76,5 @@ void HeedSimulation::TransportPhoton(EventAction *eventAction, G4double energy, 
   this->track->TransportPhoton(x0, y0, z0, t0, e0, dx, dy, dz, primaries);
   //cout << e0 << endl;
   //cout << track->GetW() << endl;
-  if (primaries>0) this->runAction->FillNtuples("conversion", primaries/track->GetW(), primaries);
+  if (primaries>0) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
 }

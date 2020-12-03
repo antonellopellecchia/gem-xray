@@ -23,23 +23,89 @@ def main():
 
     rootFile = rt.TFile(options.input)
 
+
+    ''' Number of primaries '''
+    gasConversionData, gasConversionColumns = rootFile.Get('conversion').AsMatrix(return_labels=True)
+    gasConversionDataFrame = pd.DataFrame(data=gasConversionData, columns=gasConversionColumns)
+
+    primariesSpectrum = rt.TH1F('GasPrimaries', ';Primary electrons;', 100, 0, 300)
+    for energy in gasConversionDataFrame['primaries']: primariesSpectrum.Fill(energy)
+    primariesSpectrum.Scale(1/primariesSpectrum.Integral(), 'width')
+
+    gaus3 = rt.TF1('gaus3', 'gaus(0)+gaus(3)+gaus(6)', 0, 300)
+    gaus4 = rt.TF1('gaus3', 'gaus(0)+gaus(3)+gaus(6)+gaus(9)', 0, 300)
+    #gaus3.SetParameters(0.05, 200, 10, 0.01, 220, 10, 0.01, 90, 10)
+    gaus4.SetParameters(0.05, 200, 10, 0.01, 220, 10, 0.01, 90, 10, 0.002, 120)
+    gaus4.SetParameter(11, 10)
+    #gaus4.SetLineStyle(7)
+    gaus4.SetLineColor(rt.kRed)
+    primariesSpectrum.Fit(gaus4)
+
+    primariesSpectrum.SetLineColor(rt.kViolet+2)
+    primariesSpectrumCanvas = rt.TCanvas('PrimariesSpectrumCanvas', '', 1000, 800)
+    primariesSpectrum.Draw('hist')
+    fs = list()
+    for i in range(4):
+        fs.append(rt.TF1('gaus%d'%(i), 'gaus(0)', 0, 300))
+        fs[-1].SetParameters(gaus4.GetParameter(3*i), gaus4.GetParameter(3*i+1), gaus4.GetParameter(3*i+2))
+        fs[-1].SetLineStyle(7)
+        fs[-1].SetLineColor(rt.kRed)
+        fs[-1].Draw('same')
+    #gaus4.Draw('same')
+
+    primariesSpectrumCanvas.Update()
+    primariesSpectrumCanvas.Draw()
+    fitBox = primariesSpectrum.FindObject('stats')
+    fitBox.SetTextColor(rt.kRed+2)
+    fitBox.SetX1NDC(0.2)
+    fitBox.SetY1NDC(0.5)
+    fitBox.SetX2NDC(0.5)
+    fitBox.SetY2NDC(0.90)
+
+    primariesSpectrumCanvas.SaveAs('%s/PrimariesSpectrum.eps'%(options.output))
+
+    averagePrimaries = primariesSpectrum.GetMean()
+    errAveragePrimaries = primariesSpectrum.GetRMS()/primariesSpectrum.GetEntries()**0.5
+    print('%1.1f +/- %1.1f primary electrons'%(averagePrimaries, errAveragePrimaries))
+
+    if options.fe55:
+        primaryPeakEnergy1 = 5.89
+        primaryPeakEnergy2 = 6.49
+    elif options.xray:
+        primaryPeakEnergy1 = 22.16
+        primaryPeakEnergy2 = 24.9
+    primaryPeakPrimaries1 = gaus4.GetParameter(1)
+    primaryPeakPrimaries2 = gaus4.GetParameter(4)
+    primariesToEnergyScale = (primaryPeakEnergy2-primaryPeakEnergy1)/(primaryPeakPrimaries2-primaryPeakPrimaries1)
+    primariesToEnergyOffset = primaryPeakEnergy2 - primariesToEnergyScale*primaryPeakPrimaries2
+    print('%1.2f peak corresponds to %1.1f primaries'%(primaryPeakEnergy1, primaryPeakPrimaries1))
+    print('%1.2f peak corresponds to %1.1f primaries'%(primaryPeakEnergy2, primaryPeakPrimaries2))
+    print('Conversion factor %1.2f keV/primary, offset %1.2f keV'%(primariesToEnergyScale, primariesToEnergyOffset))
+
+
+    ''' Energy spectrum after each layer ''' 
     volumeColors = [rt.kBlack, rt.kBlue, rt.kCyan, rt.kRed, rt.kViolet]
     volumes = ['primary', 'window', 'driftKapton', 'driftCopper', 'conversion']
     volumeTitles = ['Source', 'Window', 'Drift kapton', 'Drift copper', 'Gas conversion']
     
     energySpectra = rt.THStack('EnergySpectra', ';Energy (keV);')
-    legend = rt.TLegend(0.2, 0.7, 0.4, 0.9)
+    legend = rt.TLegend(0.2, 0.65, 0.45, 0.9)
+    legend.SetHeader('#bf{Position in detector}')
     for i,volume in enumerate(volumes):
         volumeTree = rootFile.Get(volume)
         volumeTree.Print()
 
         treeData, treeColumns = volumeTree.AsMatrix(return_labels=True)
         treeDataFrame = pd.DataFrame(data=treeData, columns=treeColumns)
-        energySpectrum = rt.TH1F('HitEnergies'+volume, '', 100, 0, 9)
-        for energy in treeDataFrame['energy']: energySpectrum.Fill(energy)
+
+        energySpectrum = rt.TH1F('HitEnergies'+volume, '', 100, 0, 7)
+        if volume == 'conversion': energies = treeDataFrame['primaries']*primariesToEnergyScale + primariesToEnergyOffset
+        else: energies = treeDataFrame['energy']
+        for energy in energies: energySpectrum.Fill(energy)
+        #energySpectrum.Scale(1/energySpectrum.Integral(), 'width') # normalize spectrum
         energySpectrum.SetLineColor(volumeColors[i])
         legend.AddEntry(energySpectrum, volumeTitles[i], 'l')
-        energySpectra.Add(energySpectrum)
+        energySpectra.Add(energySpectrum, 'hist')
 
     energySpectrumCanvas = rt.TCanvas('EnergySpectrumCanvas', '', 1000, 800)
     energySpectrumCanvas.SetLogy()
@@ -47,79 +113,5 @@ def main():
     legend.Draw()
     energySpectrumCanvas.SaveAs('%s/EnergySpectra.eps'%(options.output))
 
-
-    ''' Number of primaries '''
-    gasConversionData, gasConversionColumns = rootFile.Get('conversion').AsMatrix(return_labels=True)
-    gasConversionDataFrame = pd.DataFrame(data=gasConversionData, columns=gasConversionColumns)
-    primariesSpectrum = rt.TH1F('GasPrimaries', ';Primary electrons;', 100, 0, 300)
-    for energy in gasConversionDataFrame['primaries']: primariesSpectrum.Fill(energy)
-    primariesSpectrum.SetLineColor(rt.kViolet+2)
-    primariesSpectrumCanvas = rt.TCanvas('PrimariesSpectrumCanvas', '', 1000, 800)
-    primariesSpectrum.Draw()
-    primariesSpectrumCanvas.SaveAs('%s/PrimariesSpectrum.eps'%(options.output))
-
-    sys.exit(0)
-
-    runTreeMatrix = runTree.AsMatrix()
-    hitEventID = runTree.AsMatrix(['hitEventID'])
-    hitTimes = runTree.AsMatrix(['hitTime'])
-    vertexPositionsZ = runTree.AsMatrix(['vertexPositionZ'])
-    vertexPositionsZ = max(vertexPositionsZ) - vertexPositionsZ
-
-    timePositionHisto = rt.TH2F('TimePositionHisto', ';Photon arrival time (ns);Photon production distance from SiPM (mm)', 80, 0, 4, 40, -20, 100)
-    for t,z in zip(hitTimes, vertexPositionsZ): timePositionHisto.Fill(t, z)
-    timePositionCanvas = rt.TCanvas('TimePositionCanvas', '', 800, 800)
-    timePositionHisto.Draw('colz')
-    timePositionCanvas.SaveAs('%s/TimePosition.eps'%(options.output))
-
-    signalTimeHisto = rt.TH1F('SignalTimeHisto', ';Signal time (ns)', 60, 0, 2)
-    signalTimePositionHisto = rt.TH2F('SignalTimePositionHisto', ';Signal time (ns);Muon distance from SiPM (mm)', 60, 0, 2, 50, 0, 100)
-    signalTimeNphotonsHisto = rt.TH2F('SignalTimeNphotonsHisto', ';Signal time (ns);Number of photons collected', 60, 0, 2, 40, -10, 500)
-    positionNphotonsHisto = rt.TH2F('PositionNphotonsHisto', ';Muon hit distance from SiPM (mm);Number of photons collected', 50, 0, 100, 40, -10, 500)
-    for eventID in range(nmuons):
-        try:
-            signalTime = sorted(hitTimes[hitEventID==eventID])[:50][-1]
-            nphotons = len(hitTimes[hitEventID==eventID])
-        except IndexError: continue
-        photonVertices = vertexPositionsZ[hitEventID==eventID]
-        photonVertex = sum(photonVertices)/len(photonVertices)
-        signalTimeHisto.Fill(signalTime)
-        signalTimePositionHisto.Fill(signalTime, photonVertex)
-        positionNphotonsHisto.Fill(photonVertex, nphotons)
-        signalTimeNphotonsHisto.Fill(signalTime, nphotons)
-    
-    signalTimeCanvas = rt.TCanvas('SignalTimeCanvas', '', 800, 600)
-    #gaus2 = rt.TF1('gaus2', 'gaus(0)+gaus(3)', 0, 10)
-    #gaus2.SetParameters(500, 2, 0.8, 50, 4, 1.5)
-    #signalTimeHisto.Fit(gaus2)
-    signalTimeHisto.Draw()
-    #signalTimeHisto.Fit('gaus')
-    '''gauss1 = rt.TF1('gauss1', 'gaus', 0, 10)
-    gauss2 = rt.TF1('gauss2', 'gaus', 0, 10)
-    gauss1.SetParameters(gaus2.GetParameter(0), gaus2.GetParameter(1), gaus2.GetParameter(2))
-    gauss2.SetParameters(gaus2.GetParameter(3), gaus2.GetParameter(4), gaus2.GetParameter(5))
-    gauss1.SetLineStyle(7)
-    gauss2.SetLineStyle(7)
-    gauss1.Draw('same')
-    gauss2.Draw('same')'''
-    signalTimeCanvas.SaveAs('%s/SignalTime.eps'%(options.output))
-
-    signalTimePositionCanvas = rt.TCanvas('SignalTimePositionCanvas', '', 1000, 800)
-    signalTimePositionHisto.SetLineWidth(1)
-    signalTimePositionHisto.SetLineColor(rt.kCyan+2)
-    signalTimePositionHisto.Draw('colz')
-    signalTimePositionCanvas.SaveAs('%s/SignalTimePosition.eps'%(options.output))
-    
-    positionNphotonCanvas = rt.TCanvas('PositionNphotonCanvas', '', 850, 600)
-    positionNphotonCanvas.SetLeftMargin(-.1)
-    positionNphotonCanvas.SetRightMargin(.11)
-    positionNphotonsHisto.Draw('colz')
-    positionNphotonCanvas.SaveAs('%s/PositionNphotons.eps'%(options.output))
-    
-    signalTimeNphotonCanvas = rt.TCanvas('SignalTimeNphotonCanvas', '', 850, 600)
-    signalTimeNphotonCanvas.SetLeftMargin(-.1)
-    signalTimeNphotonCanvas.SetRightMargin(.11)
-    signalTimeNphotonsHisto.Draw('colz')
-    signalTimeNphotonCanvas.SaveAs('%s/SignalTimeNphotons.eps'%(options.output))
 
 if __name__=='__main__': main()

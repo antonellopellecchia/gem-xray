@@ -62,7 +62,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(EventAction *eventAction)
   this->spectrum = runAction->GetPrimarySpectrum();
   this->sumSpectrum = runAction->GetPrimarySpectrumSum();*/
   
-  //ReadSpectrumData();
+  ReadSpectrumData();
   
   /*this->energies = runAction->primaryEnergies;
   this->spectrum = runAction->primarySpectrum;
@@ -81,7 +81,7 @@ void PrimaryGeneratorAction::ReadSpectrumData() {
   primarySpectrum = new G4DataVector;
   primarySpectrumSum = 0.;
   
-  G4String primarySpectrumPath = "source_spectrum.csv";
+  G4String primarySpectrumPath = "xray-spectrum.csv";
   ifstream primarySpectrumFile(primarySpectrumPath);
 
   G4double energy;
@@ -174,7 +174,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
 
-  /*G4double particleEnergy = 0.;
+  G4double particleEnergy = 0.;
   G4double partSumSpectrum = 0.;
   G4int j = 0;
   G4double random = primarySpectrumSum*G4UniformRand();
@@ -182,12 +182,15 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     partSumSpectrum += (*primarySpectrum)[j];
     j++;
   }
-  particleEnergy = (*primaryEnergies)[j];*/
+  particleEnergy = (*primaryEnergies)[j];
 
+  /*
+  FOR Fe55 SPECTRUM
   G4double particleEnergy = 0.;
   G4double energyRand = G4UniformRand();
   if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
   else particleEnergy = ironLineEnergies[1];
+  */
 
   fParticleGun->SetParticleEnergy(particleEnergy*keV);
   runAction->FillNtuples("primary", particleEnergy);
