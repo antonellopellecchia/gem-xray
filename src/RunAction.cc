@@ -67,7 +67,7 @@ RunAction::RunAction(G4bool headless, string outFilePath): G4UserRunAction() {
   this->headless = headless;
   this->heedSimulation = new HeedSimulation(this);
   
-  runFile = new TFile(outFilePath.c_str(), "RECREATE", "File containing simulation output ntuples");
+  if (this->headless) runFile = new TFile(outFilePath.c_str(), "RECREATE", "Simulation output ntuples");
 
   for (G4String volume:volumes) {
     hitEnergyMap[volume] = 0.;
@@ -80,6 +80,7 @@ RunAction::RunAction(G4bool headless, string outFilePath): G4UserRunAction() {
   treeMap["driftCopper"]->Branch("momentumX", &hitMomentumX, "momentumX/D");
   treeMap["driftCopper"]->Branch("momentumY", &hitMomentumY, "momentumY/D");
   treeMap["driftCopper"]->Branch("momentumZ", &hitMomentumZ, "momentumZ/D");
+  treeMap["conversion"]->Branch("primaries", &gasPrimaries, "primaries/D");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -99,19 +100,18 @@ void RunAction::BeginOfRunAction(const G4Run* run) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void RunAction::EndOfRunAction(const G4Run* run) {
-  G4String out_dir = G4String("./out/");
+  /*G4String out_dir = G4String("./out/");
   G4String root_out_dir = G4String(out_dir+"root/");
   G4String eps_out_dir = G4String(out_dir+"eps/");
   mkdir(out_dir.c_str(), 0700);
   mkdir(root_out_dir.c_str(), 0700);
-  mkdir(eps_out_dir.c_str(), 0700);
+  mkdir(eps_out_dir.c_str(), 0700);*/
 
   G4int nofEvents = run->GetNumberOfEvent();
   if (nofEvents == 0) return;
 
   if (this->headless) {
     G4cout << G4endl;
-
     for (auto treePair:treeMap) treePair.second->Print();
     runFile->Write();
     runFile->Close();
@@ -121,8 +121,18 @@ void RunAction::EndOfRunAction(const G4Run* run) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void RunAction::FillNtuples(G4String volume, G4double energy) {
-  hitEnergyMap[volume] = energy;
-  treeMap[volume]->Fill();
+  if (this->headless) {
+    hitEnergyMap[volume] = energy;
+    treeMap[volume]->Fill();
+  }
+}
+
+void RunAction::FillNtuples(G4String volume, G4double energy, G4int primaries) {
+  if (this->headless) {
+    hitEnergyMap[volume] = energy;
+    gasPrimaries = primaries;
+    treeMap[volume]->Fill();
+  }
 }
 
 void RunAction::FillNtuples(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {

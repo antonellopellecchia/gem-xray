@@ -60,7 +60,7 @@ int main(int argc,char** argv)
   if (argc == 1) {
     ui = new G4UIExecutive(argc, argv);
     headless = false;
-  } else if (argc == 4) {
+  } else if (argc == 3) {
     if (string("test") == argv[2]) { // headless, but no output
       headless = false;
     } else { // headless, with output file

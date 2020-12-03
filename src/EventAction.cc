@@ -62,7 +62,6 @@ void EventAction::BeginOfEventAction(const G4Event *event) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void EventAction::EndOfEventAction(const G4Event* event) {
-  cout << "end of event" << endl;
   G4String volumeName;
   G4DataVector *volumeHitEnergies;
   for (auto it=hitEnergies.begin(); it!=hitEnergies.end(); it++) {
@@ -81,15 +80,13 @@ void EventAction::AddHit(G4String volume, G4double energy) {
 }
 
 void EventAction::AddHit(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
-  cout << "adding hit " << volume << endl; 
-  /*this->hitEnergies[volume]->push_back(energy);
+  this->hitEnergies[volume]->push_back(energy);
   this->hitPositions[volume]->push_back(position);
   this->hitMomenta[volume]->push_back(momentum);
 
   if (volume==G4String("driftCopper")) {
     runAction->heedSimulation->TransportPhoton(this, energy, position, momentum);
-  }*/
-  cout << "added hit " << volume << endl; 
+  }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

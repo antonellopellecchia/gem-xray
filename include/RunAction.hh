@@ -59,6 +59,7 @@ public:
   virtual void EndOfRunAction(const G4Run*);
 
   void FillNtuples(G4String volume, G4double energy);
+  void FillNtuples(G4String volume, G4double energy, G4int primaries);
   void FillNtuples(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum);
   
   G4int nOfEvents;
@@ -84,6 +85,8 @@ private:
 
   // variables for ntuples
   map<G4String, G4double> hitEnergyMap;
+  
+  G4double gasPrimaries;
 
   G4double hitPositionX;
   G4double hitPositionY;

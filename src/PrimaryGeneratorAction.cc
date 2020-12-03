@@ -186,14 +186,13 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
   G4double particleEnergy = 0.;
   G4double energyRand = G4UniformRand();
-  if (energyRand>=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
+  if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
   else particleEnergy = ironLineEnergies[1];
 
   fParticleGun->SetParticleEnergy(particleEnergy*keV);
   runAction->FillNtuples("primary", particleEnergy);
   
   fParticleGun->GeneratePrimaryVertex(anEvent);
-  cout << "Particle energy " << particleEnergy << endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
