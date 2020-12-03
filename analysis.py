@@ -9,6 +9,7 @@ import pandas as pd
 
 from physlibs.root import root_style_ftm
 
+
 def main():
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument('-i', '--input')
@@ -22,13 +23,42 @@ def main():
 
     rootFile = rt.TFile(options.input)
 
-    energySpectra = rt.THStack('EnergySpectra', ';Energy (keV);')
+    volumeColors = [rt.kBlack, rt.kBlue, rt.kCyan, rt.kRed, rt.kViolet]
     volumes = ['primary', 'window', 'driftKapton', 'driftCopper', 'conversion']
-    for volume in volumes:
+    volumeTitles = ['Source', 'Window', 'Drift kapton', 'Drift copper', 'Gas conversion']
+    
+    energySpectra = rt.THStack('EnergySpectra', ';Energy (keV);')
+    legend = rt.TLegend(0.2, 0.7, 0.4, 0.9)
+    for i,volume in enumerate(volumes):
         volumeTree = rootFile.Get(volume)
         volumeTree.Print()
 
-        
+        treeData, treeColumns = volumeTree.AsMatrix(return_labels=True)
+        treeDataFrame = pd.DataFrame(data=treeData, columns=treeColumns)
+        energySpectrum = rt.TH1F('HitEnergies'+volume, '', 100, 0, 9)
+        for energy in treeDataFrame['energy']: energySpectrum.Fill(energy)
+        energySpectrum.SetLineColor(volumeColors[i])
+        legend.AddEntry(energySpectrum, volumeTitles[i], 'l')
+        energySpectra.Add(energySpectrum)
+
+    energySpectrumCanvas = rt.TCanvas('EnergySpectrumCanvas', '', 1000, 800)
+    energySpectrumCanvas.SetLogy()
+    energySpectra.Draw('nostack')
+    legend.Draw()
+    energySpectrumCanvas.SaveAs('%s/EnergySpectra.eps'%(options.output))
+
+
+    ''' Number of primaries '''
+    gasConversionData, gasConversionColumns = rootFile.Get('conversion').AsMatrix(return_labels=True)
+    gasConversionDataFrame = pd.DataFrame(data=gasConversionData, columns=gasConversionColumns)
+    primariesSpectrum = rt.TH1F('GasPrimaries', ';Primary electrons;', 100, 0, 300)
+    for energy in gasConversionDataFrame['primaries']: primariesSpectrum.Fill(energy)
+    primariesSpectrum.SetLineColor(rt.kViolet+2)
+    primariesSpectrumCanvas = rt.TCanvas('PrimariesSpectrumCanvas', '', 1000, 800)
+    primariesSpectrum.Draw()
+    primariesSpectrumCanvas.SaveAs('%s/PrimariesSpectrum.eps'%(options.output))
+
+    sys.exit(0)
 
     runTreeMatrix = runTree.AsMatrix()
     hitEventID = runTree.AsMatrix(['hitEventID'])

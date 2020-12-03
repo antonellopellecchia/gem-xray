@@ -10,4 +10,4 @@
 #/process/em/fluo true
 #/process/em/auger true
 
-/run/beamOn 1000000
+/run/beamOn 100000
