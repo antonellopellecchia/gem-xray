@@ -60,9 +60,9 @@
 
 # "Envelope" is transparent blue to represent water
 /vis/geometry/set/colour Envelope 0 0 .9 0 .2
-/vis/geometry/set/colour CopperLogical 0 .5 0 .8 .5
-/vis/geometry/set/colour FR4Logical 0 .5 0 0 .5
-/vis/geometry/set/colour CathodeLogical 0 0 0 .8 .5
+/vis/geometry/set/colour WindowKaptonLogical 0 .5 0 .8 .5
+/vis/geometry/set/colour DriftKaptonLogical 0 .5 0 0 .5
+/vis/geometry/set/colour DriftCopperLogical 0 0 0 .8 .5
 /vis/viewer/set/style surface
 /vis/viewer/set/hiddenMarker true
 /vis/viewer/set/viewpointThetaPhi 120 150

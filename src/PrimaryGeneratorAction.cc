@@ -61,7 +61,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(EventAction *eventAction)
   /*this->energies = runAction->GetPrimaryEnergies();
   this->spectrum = runAction->GetPrimarySpectrum();
   this->sumSpectrum = runAction->GetPrimarySpectrumSum();*/
-  ReadSpectrumData();
+  
+  //ReadSpectrumData();
   
   /*this->energies = runAction->primaryEnergies;
   this->spectrum = runAction->primarySpectrum;
@@ -146,7 +147,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     G4ExceptionDescription msg;
     msg << "Envelope volume of box shape not found.\n"; 
     msg << "Perhaps you have changed geometry.\n";
-    msg << "The gun will be place at the center.";
+    msg << "The gun will be placed at the center.";
     G4Exception("PrimaryGeneratorAction::GeneratePrimaries()",
 		"MyCode0002",JustWarning,msg);
   }
@@ -155,37 +156,6 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   G4double x0 = size * envSizeXY * (G4UniformRand()-0.5);
   G4double y0 = size * envSizeXY * (G4UniformRand()-0.5);
   G4double z0 = -0.5 * envSizeZ;
-
-  /*
-    Define copper tape to position
-    the beam right in front of it
-  */ 
-
-  G4double copperSizeX = 0;
-  G4double copperSizeY = 0;
-  G4double copperSizeZ = 0;
-  if (!fCopperBox) {
-    G4LogicalVolume *copperLV = G4LogicalVolumeStore::GetInstance()->GetVolume("CopperLogical");
-    if (copperLV) fCopperBox = dynamic_cast<G4Box*>(copperLV->GetSolid());
-  }
-
-  if (fCopperBox) {
-    copperSizeX = fCopperBox->GetXHalfLength()*2.;
-    copperSizeY = fCopperBox->GetYHalfLength()*2.;
-    copperSizeZ = fCopperBox->GetZHalfLength()*2.;
-  } else {
-    G4ExceptionDescription msg;
-    msg << "Copper logic box not found.\n";
-    msg << "The gun will be place at the center.";
-    G4Exception("PrimaryGeneratorAction::GeneratePrimaries()",
-		"MyCode0002",JustWarning,msg);
-  }
-  
-  // uniform beam position
-  size = 0.5;
-  x0 = size * copperSizeX * (G4UniformRand()-0.5);
-  y0 = size * copperSizeY * (G4UniformRand()-0.5);
-  z0 = -5.*cm;
 
   // gaussian positioning, center in (0,0), sigma 1 mm
   G4double beamSigma = 1.*mm;
@@ -198,13 +168,13 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
   x0 = 0;
   y0 = 0;
-  z0 = -0.5*envSizeZ;
+  z0 = 0.;
   //x0 = G4RandGauss::shoot(0, beamSigma);
   //y0 = G4RandGauss::shoot(0, beamSigma);
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
 
-  G4double particleEnergy = 0.;
+  /*G4double particleEnergy = 0.;
   G4double partSumSpectrum = 0.;
   G4int j = 0;
   G4double random = primarySpectrumSum*G4UniformRand();
@@ -212,11 +182,18 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     partSumSpectrum += (*primarySpectrum)[j];
     j++;
   }
-  particleEnergy = (*primaryEnergies)[j];
+  particleEnergy = (*primaryEnergies)[j];*/
+
+  G4double particleEnergy = 0.;
+  G4double energyRand = G4UniformRand();
+  if (energyRand>=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
+  else particleEnergy = ironLineEnergies[1];
+
   fParticleGun->SetParticleEnergy(particleEnergy*keV);
   runAction->FillNtuples("primary", particleEnergy);
   
   fParticleGun->GeneratePrimaryVertex(anEvent);
+  cout << "Particle energy " << particleEnergy << endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

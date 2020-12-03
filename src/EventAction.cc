@@ -52,8 +52,8 @@ EventAction::~EventAction() {}
 
 void EventAction::BeginOfEventAction(const G4Event *event) {
   for (G4String volume:this->volumes) this->hitEnergies[volume] = new G4DataVector();
-  this->hitPositions["gas"] = new vector<G4ThreeVector>();
-  this->hitMomenta["gas"] = new vector<G4ThreeVector>();
+  this->hitPositions["driftCopper"] = new vector<G4ThreeVector>();
+  this->hitMomenta["driftCopper"] = new vector<G4ThreeVector>();
 
   G4int eventID = event->GetEventID();
   if (eventID%10000 == 0) G4cout << eventID << "/" << runAction->nOfEvents << "\t\t" << G4endl;
@@ -62,16 +62,17 @@ void EventAction::BeginOfEventAction(const G4Event *event) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void EventAction::EndOfEventAction(const G4Event* event) {
+  cout << "end of event" << endl;
   G4String volumeName;
   G4DataVector *volumeHitEnergies;
   for (auto it=hitEnergies.begin(); it!=hitEnergies.end(); it++) {
     volumeName = it->first;
     volumeHitEnergies = it->second;
-    if (volumeName!=G4String("gas"))
+    if (volumeName!=G4String("driftCopper"))
       for (G4double energy:*volumeHitEnergies) this->runAction->FillNtuples(volumeName, energy);
     else
       for (int i=0; i<volumeHitEnergies->size(); i++)
-	this->runAction->FillNtuples(volumeName, (*volumeHitEnergies)[i], (*hitPositions["gas"])[i], (*hitMomenta["gas"])[i]);
+	this->runAction->FillNtuples(volumeName, (*volumeHitEnergies)[i], (*hitPositions["driftCopper"])[i], (*hitMomenta["driftCopper"])[i]);
   }
 }
 
@@ -80,13 +81,15 @@ void EventAction::AddHit(G4String volume, G4double energy) {
 }
 
 void EventAction::AddHit(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
-  this->hitEnergies[volume]->push_back(energy);
+  cout << "adding hit " << volume << endl; 
+  /*this->hitEnergies[volume]->push_back(energy);
   this->hitPositions[volume]->push_back(position);
   this->hitMomenta[volume]->push_back(momentum);
 
-  if (volume==G4String("gas")) {
+  if (volume==G4String("driftCopper")) {
     runAction->heedSimulation->TransportPhoton(this, energy, position, momentum);
-  }
+  }*/
+  cout << "added hit " << volume << endl; 
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

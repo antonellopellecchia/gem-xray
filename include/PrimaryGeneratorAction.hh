@@ -70,6 +70,9 @@ private:
   G4DataVector *primaryEnergies;
   G4DataVector *primarySpectrum;
   G4double primarySpectrumSum;
+
+  G4double ironLineEnergies[2] = {5.89, 6.49};
+  G4double ironLineIntensities[2] = {0.87985866, 0.12014134};
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

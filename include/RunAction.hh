@@ -76,9 +76,9 @@ public:
 private:
   TFile *runFile;
   TTree *primaryTree;
-  TTree *fr4Tree;
-  TTree *cathodeTree;
-  TTree *gasTree;
+  TTree *afterWindowTree;
+  TTree *afterDriftTree;
+  TTree *inGasTree;
 
   bool headless;
 
@@ -94,7 +94,7 @@ private:
   G4double hitMomentumZ;
 
   map<G4String, TTree*> treeMap;
-  G4String volumes[5] = {"primary", "fr4", "cathode", "gas", "conversion"};
+  G4String volumes[5] = {"primary", "window", "driftKapton", "driftCopper", "conversion"};
 };
 
 #endif

@@ -68,7 +68,7 @@ private:
   map<string,vector<G4ThreeVector>*> hitPositions;
   map<string,vector<G4ThreeVector>*> hitMomenta;
   
-  G4String volumes[3] = {"fr4", "cathode", "gas"};
+  G4String volumes[3] = {"window", "driftKapton", "driftCopper"};
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

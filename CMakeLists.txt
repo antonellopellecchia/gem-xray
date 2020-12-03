@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------------
 # Setup the project
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
-project(XRAY_COPPER)
+project(gem-xray)
 
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
@@ -51,10 +51,10 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries
 #
-add_executable(xray_copper xray_copper.cc ${sources} ${headers})
-target_link_libraries(xray_copper ${Geant4_LIBRARIES})
-target_link_libraries(xray_copper ${ROOT_LIBRARIES})
-target_link_libraries(xray_copper ${Garfield_LIBRARIES})
+add_executable(gem-xray gem-xray.cc ${sources} ${headers})
+target_link_libraries(gem-xray ${Geant4_LIBRARIES})
+target_link_libraries(gem-xray ${ROOT_LIBRARIES})
+target_link_libraries(gem-xray ${Garfield_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
@@ -88,6 +88,6 @@ add_custom_target(B1 DEPENDS exampleB1)
 #----------------------------------------------------------------------------
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
-install(TARGETS xray_copper DESTINATION bin)
+install(TARGETS gem-xray DESTINATION bin)
 
 

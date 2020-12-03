@@ -35,16 +35,13 @@
 #include "G4Event.hh"
 #include "G4RunManager.hh"
 #include "G4LogicalVolume.hh"
+#include "G4LogicalVolumeStore.hh"
 
 #include <TMath.h>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-SteppingAction::SteppingAction(EventAction* eventAction)
-  :G4UserSteppingAction(),
-   copperVolume(0),
-   fr4Volume(0),
-   cathodeVolume(0) {
+SteppingAction::SteppingAction(EventAction* eventAction):G4UserSteppingAction() {
   this->eventAction = eventAction;
 }
 
@@ -60,19 +57,23 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   G4Track *track = step->GetTrack();
   G4int trackID = track->GetTrackID();
 
-  if (!copperVolume || !fr4Volume || !cathodeVolume) {
-    const DetectorConstruction* detectorConstruction = static_cast<const DetectorConstruction*> (G4RunManager::GetRunManager()->GetUserDetectorConstruction());
-    copperVolume = detectorConstruction->GetCopper();
-    fr4Volume = detectorConstruction->GetFR4();
-    cathodeVolume = detectorConstruction->GetCathode();
+  if (!windowKaptonVolume || !driftKaptonVolume || !driftCopperVolume) {
+    windowKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("WindowKaptonLogical");
+    driftKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftKaptonLogical");
+    driftCopperVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftCopperLogical");
   }
   
   G4LogicalVolume* volume = step->GetPreStepPoint()-> GetTouchableHandle()->GetVolume()->GetLogicalVolume();
   G4String particleName = step->GetTrack()->GetParticleDefinition()->GetParticleName();
+  G4LogicalVolume *nextVolume = step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
 
-  if (volume==fr4Volume && particleName==G4String("gamma") && step->IsFirstStepInVolume()) { // get spectrum after copper tape entering FR4
-    this->eventAction->AddHit("fr4", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-  } else if (volume==cathodeVolume && particleName==G4String("gamma")) {
+  cout << "step " << volume->GetName() << endl;
+
+  if (volume==windowKaptonVolume && particleName==G4String("gamma")) {
+    // get spectrum entering detector kapton window:
+    if (step->IsFirstStepInVolume()) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    cout << "window" << endl;
+  } else if (volume==driftKaptonVolume && particleName==G4String("gamma")) {
     /*G4cout << "primary " << step->GetTrack()->GetParticleDefinition()->GetParticleName();
     G4cout << " process " << step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
     G4cout << " energy before " << step->GetPreStepPoint()->GetTotalEnergy()*1e3 << " keV";
@@ -80,16 +81,22 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     G4cout << " from volume " << step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
     G4cout << " to volume " << step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
     G4cout << G4endl;*/
-    if (step->IsFirstStepInVolume()) // get spectrum after FR4 entering cathode
-      this->eventAction->AddHit("cathode", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-    G4String nextVolume = step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
-    if (nextVolume==G4String("Envelope")) { // get spectrum after cathode entering gas
-      this->eventAction->AddHit("gas",
-				      step->GetPostStepPoint()->GetTotalEnergy()*1.e3,
-				      step->GetPostStepPoint()->GetPosition(),
-				      step->GetPostStepPoint()->GetMomentumDirection());
-    }
+    // get spectrum entering drift kapton:
+    if (step->IsFirstStepInVolume()) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    cout << "drift kapton" << endl;
+  } else if (volume==driftCopperVolume && particleName==G4String("gamma")) {
+      // get spectrum after cathode entering gas:
+      if (nextVolume->GetName()==G4String("Envelope")) {
+        this->eventAction->AddHit("driftCopper",
+          step->GetPostStepPoint()->GetTotalEnergy()*1.e3,
+          step->GetPostStepPoint()->GetPosition(),
+          step->GetPostStepPoint()->GetMomentumDirection());
+      }
+      cout << "drift copper" << endl;
   }
+  cout << "end step " << volume->GetName() << endl;
+  cout << "PRINTING EVENT ACTION" << endl;
+  cout << this->eventAction << endl;
   
   /*if (trackID <= 1) {
     // process primary track

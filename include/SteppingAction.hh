@@ -50,10 +50,10 @@ public:
   virtual void UserSteppingAction(const G4Step*);
 
 private:
-  EventAction*     eventAction;
-  G4LogicalVolume* copperVolume;
-  G4LogicalVolume* fr4Volume;
-  G4LogicalVolume* cathodeVolume;
+  EventAction*     eventAction = 0;
+  G4LogicalVolume* windowKaptonVolume;
+  G4LogicalVolume* driftKaptonVolume;
+  G4LogicalVolume* driftCopperVolume;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

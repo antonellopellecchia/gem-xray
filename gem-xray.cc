@@ -27,7 +27,7 @@
 /// \file exampleB1.cc
 /// \brief Main program of the B1 example
 
-#include "DetectorConstruction.hh"
+#include "DetectorConstruction10x10.hh"
 #include "ActionInitialization.hh"
 #include "PhysicsList.hh"
 
@@ -55,19 +55,16 @@ int main(int argc,char** argv)
   //
   G4UIExecutive* ui = 0;
   bool headless = true;
-  G4int copperThickness = 0;
 
   string outFilePath = "";
   if (argc == 1) {
     ui = new G4UIExecutive(argc, argv);
     headless = false;
-    copperThickness = 10;
   } else if (argc == 4) {
     if (string("test") == argv[2]) { // headless, but no output
       headless = false;
     } else { // headless, with output file
       outFilePath = string(argv[2]);
-      copperThickness = atoi(argv[3]);
     }
   }
 
@@ -85,7 +82,7 @@ int main(int argc,char** argv)
   // Set mandatory initialization classes
   //
   // Detector construction
-  runManager->SetUserInitialization(new DetectorConstruction(copperThickness));
+  runManager->SetUserInitialization(new DetectorConstruction10x10());
 
   // Physics list
   G4VModularPhysicsList* physicsList = new PhysicsList(); //new QBBC;
