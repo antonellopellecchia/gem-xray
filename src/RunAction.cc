@@ -46,8 +46,6 @@
 #include <TStyle.h>
 #include <TTree.h>
 
-#include "style.cc"
-
 #include "RunAction.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "DetectorConstruction.hh"
