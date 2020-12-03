@@ -68,6 +68,7 @@ set(EXAMPLEB1_SCRIPTS
   run.mac
   vis.mac
   xray-spectrum.csv
+  xray-spectrum-40kV.csv
   )
 
 foreach(_script ${EXAMPLEB1_SCRIPTS})
