@@ -24,6 +24,7 @@ public:
   virtual ~HeedSimulation();
   
   void TransportPhoton(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum);
+  void TransportDelta(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum);
 
 private:
   RunAction *runAction;

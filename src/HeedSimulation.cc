@@ -53,11 +53,14 @@ HeedSimulation::HeedSimulation(RunAction *runAction) {
 	
   this->track = new TrackHeed();
 
-  Sensor *sensor = new Sensor();
   ComponentConstant *field = new ComponentConstant();
   field->SetGeometry(geo);
+  field->SetElectricField(0., 0., -2e3);
+
+  Sensor *sensor = new Sensor();
   sensor->AddComponent(field);
   track->SetSensor(sensor);
+  track->SetParticle("electron");
 }
 
 HeedSimulation::~HeedSimulation() {}
@@ -72,9 +75,25 @@ void HeedSimulation::TransportPhoton(EventAction *eventAction, G4double energy, 
   const double dz = momentum.getZ();
   const double e0 = energy*1.e3;
   int primaries = 0;
-  //cout << e0 << endl;
   this->track->TransportPhoton(x0, y0, z0, t0, e0, dx, dy, dz, primaries);
-  //cout << e0 << endl;
-  //cout << track->GetW() << endl;
-  if (primaries>0) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
+  if (primaries>50) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
+}
+
+void HeedSimulation::TransportDelta(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
+  const double x0 = position.getX()*1e-1;
+  const double y0 = position.getY()*1e-1;
+  const double z0 = -0.15 + 0.001;
+  const double t0 = 0.;
+  const double dx = momentum.getX();
+  const double dy = momentum.getY();
+  const double dz = momentum.getZ();
+  const double e0 = energy*1.e3;
+  /*this->track->SetKineticEnergy(e0);
+  this->track->NewTrack(x0, y0, z0, t0, dx, dy, dz);
+  double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., extra = 0.;
+  int nc = 0;
+  while (this->track->GetCluster(xc, yc, zc, tc, nc, ec, extra)) primaries += nc;*/
+  int primaries = 0;
+  this->track->TransportDeltaElectron(x0, y0, z0, t0, e0, dx, dy, dz, primaries);
+  if (primaries>50) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
 }

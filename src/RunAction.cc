@@ -74,12 +74,6 @@ RunAction::RunAction(G4bool headless, string outFilePath): G4UserRunAction() {
     treeMap[volume] = new TTree(volume, "");
     treeMap[volume]->Branch("energy", &hitEnergyMap[volume], "energy/D");
   }
-  treeMap["driftCopper"]->Branch("positionX", &hitPositionX, "positionX/D");
-  treeMap["driftCopper"]->Branch("positionY", &hitPositionY, "positionY/D");
-  treeMap["driftCopper"]->Branch("positionZ", &hitPositionZ, "positionZ/D");
-  treeMap["driftCopper"]->Branch("momentumX", &hitMomentumX, "momentumX/D");
-  treeMap["driftCopper"]->Branch("momentumY", &hitMomentumY, "momentumY/D");
-  treeMap["driftCopper"]->Branch("momentumZ", &hitMomentumZ, "momentumZ/D");
   treeMap["conversion"]->Branch("primaries", &gasPrimaries, "primaries/D");
 }
 

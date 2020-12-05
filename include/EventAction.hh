@@ -59,7 +59,8 @@ public:
   virtual void EndOfEventAction(const G4Event* event);
 
   void AddHit(G4String volume, G4double energy);
-  void AddHit(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum);
+  void TransportPhoton(G4double energy, G4ThreeVector position, G4ThreeVector momentum);
+  void TransportDelta(G4double energy, G4ThreeVector position, G4ThreeVector momentum);
 
 private:
   RunAction* runAction;

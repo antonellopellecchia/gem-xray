@@ -67,11 +67,7 @@ void EventAction::EndOfEventAction(const G4Event* event) {
   for (auto it=hitEnergies.begin(); it!=hitEnergies.end(); it++) {
     volumeName = it->first;
     volumeHitEnergies = it->second;
-    if (volumeName!=G4String("driftCopper"))
-      for (G4double energy:*volumeHitEnergies) this->runAction->FillNtuples(volumeName, energy);
-    else
-      for (int i=0; i<volumeHitEnergies->size(); i++)
-	this->runAction->FillNtuples(volumeName, (*volumeHitEnergies)[i], (*hitPositions["driftCopper"])[i], (*hitMomenta["driftCopper"])[i]);
+    for (G4double energy:*volumeHitEnergies) this->runAction->FillNtuples(volumeName, energy);
   }
 }
 
@@ -79,14 +75,12 @@ void EventAction::AddHit(G4String volume, G4double energy) {
   this->hitEnergies[volume]->push_back(energy);
 }
 
-void EventAction::AddHit(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
-  this->hitEnergies[volume]->push_back(energy);
-  this->hitPositions[volume]->push_back(position);
-  this->hitMomenta[volume]->push_back(momentum);
+void EventAction::TransportPhoton(G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
+  runAction->heedSimulation->TransportPhoton(this, energy, position, momentum);
+}
 
-  if (volume==G4String("driftCopper")) {
-    runAction->heedSimulation->TransportPhoton(this, energy, position, momentum);
-  }
+void EventAction::TransportDelta(G4double kineticEnergy, G4ThreeVector position, G4ThreeVector momentum) {
+  if (kineticEnergy > 0.) runAction->heedSimulation->TransportDelta(this, kineticEnergy, position, momentum);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

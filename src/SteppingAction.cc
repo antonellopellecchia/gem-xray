@@ -52,8 +52,7 @@ SteppingAction::~SteppingAction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void SteppingAction::UserSteppingAction(const G4Step* step)
-{
+void SteppingAction::UserSteppingAction(const G4Step* step) {
   G4Track *track = step->GetTrack();
   G4int trackID = track->GetTrackID();
 
@@ -68,26 +67,30 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   G4String particleName = track->GetParticleDefinition()->GetParticleName();
   G4LogicalVolume *nextVolume = track->GetNextVolume()->GetLogicalVolume();
 
-  if (particleName==G4String("gamma")) {
-    if (volume==windowKaptonVolume) { // get spectrum entering detector kapton window
-      if (step->IsLastStepInVolume()) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-    } else if (volume==driftKaptonVolume) { // get spectrum entering drift kapton
-      if (step->IsLastStepInVolume()) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-    } else if (volume==driftCopperVolume) { // get primaries after cathode entering gas
-      if (step->IsLastStepInVolume())
-        this->eventAction->AddHit("driftCopper",
-          step->GetPostStepPoint()->GetTotalEnergy()*1.e3,
-          step->GetPostStepPoint()->GetPosition(),
-          step->GetPostStepPoint()->GetMomentumDirection()
-        );
+  if (step->IsLastStepInVolume() and particleName==G4String("gamma")) {
+    if (volume==windowKaptonVolume) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    else if (volume==driftKaptonVolume) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    else if (volume==driftCopperVolume) {
+      this->eventAction->AddHit("driftCopper", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+      this->eventAction->TransportPhoton(
+        step->GetPostStepPoint()->GetTotalEnergy()*1.e3,
+        step->GetPostStepPoint()->GetPosition(),
+        step->GetPostStepPoint()->GetMomentumDirection()
+      );
     }
-  } else if (particleName==G4String("e-")) {
-    if (volume==driftGapVolume and step->IsFirstStepInVolume()) {
-      //if (nextVolume) cout << nextVolume->GetName() << endl;
-      cout << trackID << " ";
-      cout << step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName() << " ";
-      cout << track->GetCreatorProcess()->GetProcessName() << " ";
-      cout << endl;
+  } else if (step->IsFirstStepInVolume() and volume==driftGapVolume) {
+    /*if (particleName==G4String("gamma")) {
+      /*this->eventAction->TransportPhoton(
+        step->GetPreStepPoint()->GetTotalEnergy()*1.e3,
+        step->GetPreStepPoint()->GetPosition(),
+        step->GetPreStepPoint()->GetMomentumDirection()
+      );
+    }else */if (particleName==G4String("e-")) {
+    this->eventAction->TransportDelta(
+        step->GetPostStepPoint()->GetKineticEnergy()*1.e3,
+        step->GetPostStepPoint()->GetPosition(),
+        step->GetPostStepPoint()->GetMomentumDirection()
+      );
     }
   }
 }
