@@ -54,6 +54,7 @@ private:
   G4LogicalVolume* windowKaptonVolume;
   G4LogicalVolume* driftKaptonVolume;
   G4LogicalVolume* driftCopperVolume;
+  G4LogicalVolume* driftGapVolume;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

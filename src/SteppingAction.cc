@@ -61,36 +61,45 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     windowKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("WindowKaptonLogical");
     driftKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftKaptonLogical");
     driftCopperVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftCopperLogical");
+    driftGapVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftGapLogical");
   }
   
-  G4LogicalVolume* volume = step->GetPreStepPoint()-> GetTouchableHandle()->GetVolume()->GetLogicalVolume();
-  G4String particleName = step->GetTrack()->GetParticleDefinition()->GetParticleName();
-  G4LogicalVolume *nextVolume = step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+  G4LogicalVolume* volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+  G4String particleName = track->GetParticleDefinition()->GetParticleName();
+  G4LogicalVolume *nextVolume = track->GetNextVolume()->GetLogicalVolume();
 
-
-  if (volume==windowKaptonVolume && particleName==G4String("gamma")) {
-    // get spectrum entering detector kapton window:
-    if (step->IsFirstStepInVolume()) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-  } else if (volume==driftKaptonVolume && particleName==G4String("gamma")) {
-    /*G4cout << "primary " << step->GetTrack()->GetParticleDefinition()->GetParticleName();
-    G4cout << " process " << step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-    G4cout << " energy before " << step->GetPreStepPoint()->GetTotalEnergy()*1e3 << " keV";
-    G4cout << " energy after " << step->GetPostStepPoint()->GetTotalEnergy()*1e3 << " keV";
-    G4cout << " from volume " << step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
-    G4cout << " to volume " << step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
-    G4cout << G4endl;*/
-    // get spectrum entering drift kapton:
-    if (step->IsFirstStepInVolume()) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-  } else if (volume==driftCopperVolume && particleName==G4String("gamma")) {
-      // get spectrum after cathode entering gas:
-      if (step->IsLastStepInVolume()) {
+  if (particleName==G4String("gamma")) {
+    if (volume==windowKaptonVolume) { // get spectrum entering detector kapton window
+      if (step->IsLastStepInVolume()) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    } else if (volume==driftKaptonVolume) { // get spectrum entering drift kapton
+      if (step->IsLastStepInVolume()) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    } else if (volume==driftCopperVolume) { // get primaries after cathode entering gas
+      if (step->IsLastStepInVolume())
         this->eventAction->AddHit("driftCopper",
           step->GetPostStepPoint()->GetTotalEnergy()*1.e3,
           step->GetPostStepPoint()->GetPosition(),
-          step->GetPostStepPoint()->GetMomentumDirection());
-      }
+          step->GetPostStepPoint()->GetMomentumDirection()
+        );
+    }
+  } else if (particleName==G4String("e-")) {
+    if (volume==driftGapVolume and step->IsFirstStepInVolume()) {
+      //if (nextVolume) cout << nextVolume->GetName() << endl;
+      cout << trackID << " ";
+      cout << step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName() << " ";
+      cout << track->GetCreatorProcess()->GetProcessName() << " ";
+      cout << endl;
+    }
   }
 }
+
+      /*G4cout << "primary " << step->GetTrack()->GetParticleDefinition()->GetParticleName();
+      G4cout << " process " << step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+      G4cout << " energy before " << step->GetPreStepPoint()->GetTotalEnergy()*1e3 << " keV";
+      G4cout << " energy after " << step->GetPostStepPoint()->GetTotalEnergy()*1e3 << " keV";
+      G4cout << " from volume " << step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
+      G4cout << " to volume " << step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
+      G4cout << G4endl;*/
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

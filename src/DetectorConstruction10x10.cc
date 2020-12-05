@@ -80,6 +80,8 @@ G4VPhysicalVolume* DetectorConstruction10x10::Construct()
   pvc->AddElement(H, 3);
   pvc->AddElement(Cl, 1);
 
+  G4Material *argon = G4Material::GetMaterial("G4_Ar");
+
   G4Material *fr4 = createFR4();
   
   // Get nist material manager
@@ -102,7 +104,7 @@ G4VPhysicalVolume* DetectorConstruction10x10::Construct()
   G4double sizeXY = 10*mm;
   // envelope parameters
   G4double envSizeXY = 1.5*sizeXY;
-  G4double envSizeZ = sourceToChamberZ+chamberWindowThickness+gasThickness+driftKaptonThickness+driftCopperThickness+driftGapThickness;
+  G4double envSizeZ = sourceToChamberZ+chamberWindowThickness+gasThickness+driftKaptonThickness+driftCopperThickness+2*driftGapThickness;
   
   // Option to switch on/off checking of volumes overlaps
   //
@@ -154,7 +156,12 @@ G4VPhysicalVolume* DetectorConstruction10x10::Construct()
   G4Box *driftCopperSolid = new G4Box("DriftCopperBox", 0.5*sizeXY, 0.5*sizeXY, 0.5*driftCopperThickness);
   G4LogicalVolume *driftCopperLogical = new G4LogicalVolume(driftCopperSolid, copper, "DriftCopperLogical");
   new G4PVPlacement(0, G4ThreeVector(0.,0.,driftCopperZ), driftCopperLogical, "DriftCopperPhysical", logicEnv, false, 0, checkOverlaps);
-  
+
+  G4double driftGapZ = driftCopperZ + 0.5*driftCopperThickness + 0.5*driftGapThickness;
+  G4Box *driftGapSolid = new G4Box("DriftGapBox", 0.5*sizeXY, 0.5*sizeXY, 0.5*driftGapThickness);
+  G4LogicalVolume *driftGapLogical = new G4LogicalVolume(driftGapSolid, argon, "DriftGapLogical");
+  new G4PVPlacement(0, G4ThreeVector(0.,0.,driftGapZ), driftGapLogical, "DriftGapPhysical", logicEnv, false, 0, checkOverlaps);
+
   return physWorld;
 }
 

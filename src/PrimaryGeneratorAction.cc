@@ -81,7 +81,7 @@ void PrimaryGeneratorAction::ReadSpectrumData() {
   primarySpectrum = new G4DataVector;
   primarySpectrumSum = 0.;
   
-  G4String primarySpectrumPath = "xray-spectrum-40kV.csv";
+  G4String primarySpectrumPath = "xray-spectrum.csv";
   ifstream primarySpectrumFile(primarySpectrumPath);
 
   G4double energy;
