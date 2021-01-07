@@ -30,6 +30,8 @@
 #ifndef SteppingAction_h
 #define SteppingAction_h 1
 
+#include<vector>
+
 #include "G4UserSteppingAction.hh"
 #include "globals.hh"
 
@@ -51,10 +53,22 @@ public:
 
 private:
   EventAction*     eventAction = 0;
-  G4LogicalVolume* windowKaptonVolume;
-  G4LogicalVolume* driftKaptonVolume;
+  //G4LogicalVolume* windowKaptonVolume;
+  //G4LogicalVolume* driftKaptonVolume;
+  //G4LogicalVolume* driftFr4Volume;
   G4LogicalVolume* driftCopperVolume;
   G4LogicalVolume* driftGapVolume;
+
+  std::vector<std::pair<G4String, G4double>> layersMap;
+  std::vector<G4LogicalVolume *> volumesBeforeDrift;
+  std::vector<G4String> volumeBranchNames;
+  /*std::map<std::string, std::string> volumeBranchNames;
+  std::string volumeNamesBeforeDrift[4] = {
+  	"WindowKaptonLogical",
+  	"WindowCopperLogical",
+  	"DriftKaptonLogical",
+  	"DriftFr4Logical"
+  };*/
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

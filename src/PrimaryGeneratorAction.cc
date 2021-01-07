@@ -168,7 +168,6 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
   x0 = 0;
   y0 = 0;
-  z0 = 0.;
   //x0 = G4RandGauss::shoot(0, beamSigma);
   //y0 = G4RandGauss::shoot(0, beamSigma);
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));

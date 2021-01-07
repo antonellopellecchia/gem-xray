@@ -16,6 +16,10 @@ def main():
     ap.add_argument('--energies', nargs='+', type=float)
     ap.add_argument('--primaries', nargs='+', type=float)
     ap.add_argument('--calibration', nargs='+', type=float)
+    ap.add_argument('--label', type=str)
+    ap.add_argument('--geometry', type=str)
+    ap.add_argument('--materials', nargs='+', type=str)
+    ap.add_argument('--materialLabels', nargs='+', type=str)
     ap.add_argument('-v', '--verbose', action='store_true')
     ap.add_argument('-b', action='store_true', help='ROOT batch mode')
     options = ap.parse_args(sys.argv[1:])
@@ -88,6 +92,12 @@ def main():
     else:
         primariesToEnergyScale, primariesToEnergyOffset = options.calibration[0], options.calibration[1]
 
+    if options.label:
+        latex = rt.TLatex()
+        latex.SetTextAlign(32)
+        latex.SetTextSize(.035)
+        latex.DrawLatexNDC(.95, .96, options.label)
+
     primariesSpectrumCanvas.SaveAs('%s/PrimariesSpectrum.eps'%(options.output))
     primariesSpectrumCanvas.SaveAs('%s/PrimariesSpectrum.root'%(options.output))
 
@@ -98,9 +108,27 @@ def main():
 
 
     ''' Energy spectrum after each layer ''' 
-    volumeColors = [rt.kBlack, rt.kBlue, rt.kCyan, rt.kRed, rt.kViolet]
-    volumes = ['primary', 'window', 'driftKapton', 'driftCopper', 'conversion']
-    volumeTitles = ['X-ray source', 'After 125 #mum window kapton', 'After 50 #mum drift kapton', 'After 5 #mum drift copper', 'Conversion in 3 mm gas gap']
+    volumeColors = [rt.kBlack, rt.kBlue, rt.kCyan, rt.kRed, rt.kViolet, rt.kGreen, 38, 28]
+    if options.geometry:
+        if options.geometry=='10x10':
+            volumes = ['primary', 'window', 'driftKapton', 'driftCopper', 'conversion']
+            volumes = ['primary', 'kapton1', 'kapton2', 'copper3', 'conversion']
+            volumeTitles = ['X-ray source', 'After 125 #mum window kapton', 'After 50 #mum drift kapton', 'After 5 #mum drift copper', 'Conversion in 3 mm gas gap']
+        else:
+            print('Unknown geometry')
+            sys.exit(1)
+    elif options.materials:
+        volumes = ['primary']
+        volumeTitles = ['Source']
+        for i,material in enumerate(options.materials):
+            volumes.append(material+str(i+1))
+            if options.materialLabels: volumeTitles.append(options.materialLabels[i])
+            else: volumeTitles.append(volumes[-1])
+        volumes.append('conversion')
+        volumeTitles.append('Conversion in 3 mm gas gap')
+    else:
+        print('Please specify materials or geometry')
+        sys.exit(1)
     
     energySpectra = rt.THStack('EnergySpectra', ';Energy (keV);')
     legend = rt.TLegend(0.65, 0.6, 0.92, 0.92)
@@ -108,6 +136,7 @@ def main():
     for i,volume in enumerate(volumes):
         volumeTree = rootFile.Get(volume)
         volumeTree.Print()
+        if volumeTree.GetEntries()==0: continue
 
         treeData, treeColumns = volumeTree.AsMatrix(return_labels=True)
         treeDataFrame = pd.DataFrame(data=treeData, columns=treeColumns)
@@ -125,6 +154,13 @@ def main():
     energySpectrumCanvas.SetLogy()
     energySpectra.Draw('nostack')
     legend.Draw()
+
+    if options.label:
+        latex = rt.TLatex()
+        latex.SetTextAlign(32)
+        latex.SetTextSize(.035)
+        latex.DrawLatexNDC(.95, .96, options.label)
+
     energySpectrumCanvas.SaveAs('%s/EnergySpectra.eps'%(options.output))
     energySpectrumCanvas.SaveAs('%s/EnergySpectra.root'%(options.output))
 

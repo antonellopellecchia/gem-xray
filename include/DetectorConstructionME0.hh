@@ -24,37 +24,46 @@
 // ********************************************************************
 //
 //
-/// \file ActionInitialization.hh
-/// \brief Definition of the ActionInitialization class
+/// \file DetectorConstructionME0.hh
+/// \brief Definition of the DetectorConstructionME0 class
 
-#ifndef ActionInitialization_h
-#define ActionInitialization_h 1
+#ifndef DetectorConstructionME0_h
+#define DetectorConstructionME0_h 1
 
-#include "G4VUserActionInitialization.hh"
-#include "G4String.hh"
+#include "G4VUserDetectorConstruction.hh"
+#include "G4Material.hh"
+#include "globals.hh"
 
-#include <string>
-#include <vector>
+class G4VPhysicalVolume;
+class G4LogicalVolume;
 
-/// Action initialization class.
+/// Detector construction class to define materials and geometry.
 
-class ActionInitialization : public G4VUserActionInitialization
+class DetectorConstructionME0 : public G4VUserDetectorConstruction
 {
 public:
-  ActionInitialization(bool headless, std::string outFilePath, std::vector<std::pair<G4String, G4double>> layersMap);
-  virtual ~ActionInitialization();
+  DetectorConstructionME0();
+  virtual ~DetectorConstructionME0();
 
-  virtual void BuildForMaster() const;
-  virtual void Build() const;
+  virtual G4VPhysicalVolume* Construct();
 
-private:
-  bool fHeadless;
-  std::string fOutFilePath;
-  std::vector<std::pair<G4String, G4double>> layersMap;
+  void ConstructMaterials();
+    
+  G4LogicalVolume* GetCopper() const { return fCopperLogical; }
+  G4LogicalVolume* GetFR4() const { return fFR4Logical; }
+  G4LogicalVolume* GetCathode() const { return fCathodeLogical; }
+
+  G4Material *createFR4();  
+
+protected:
+  G4LogicalVolume *fCopperLogical;
+  G4LogicalVolume *fFR4Logical;
+  G4LogicalVolume *fCathodeLogical;
+
+  G4int fCopperThickness;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
 
-    

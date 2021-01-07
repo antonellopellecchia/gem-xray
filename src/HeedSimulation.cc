@@ -65,7 +65,7 @@ HeedSimulation::HeedSimulation(RunAction *runAction) {
 
 HeedSimulation::~HeedSimulation() {}
 
-void HeedSimulation::TransportPhoton(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
+int HeedSimulation::TransportPhoton(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
   const double x0 = position.getX()*1e-1;
   const double y0 = position.getY()*1e-1;
   const double z0 = -0.15;
@@ -76,13 +76,14 @@ void HeedSimulation::TransportPhoton(EventAction *eventAction, G4double energy, 
   const double e0 = energy*1.e3;
   int primaries = 0;
   this->track->TransportPhoton(x0, y0, z0, t0, e0, dx, dy, dz, primaries);
-  if (primaries>50) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
+  return primaries;
+  //this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
 }
 
-void HeedSimulation::TransportDelta(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
+int HeedSimulation::TransportElectron(EventAction *eventAction, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
   const double x0 = position.getX()*1e-1;
   const double y0 = position.getY()*1e-1;
-  const double z0 = -0.15 + 0.001;
+  const double z0 = -0.15;
   const double t0 = 0.;
   const double dx = momentum.getX();
   const double dy = momentum.getY();
@@ -95,5 +96,6 @@ void HeedSimulation::TransportDelta(EventAction *eventAction, G4double energy, G
   while (this->track->GetCluster(xc, yc, zc, tc, nc, ec, extra)) primaries += nc;*/
   int primaries = 0;
   this->track->TransportDeltaElectron(x0, y0, z0, t0, e0, dx, dy, dz, primaries);
-  if (primaries>50) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
+  return primaries;
+  //this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
 }

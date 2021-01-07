@@ -35,12 +35,13 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-ActionInitialization::ActionInitialization(G4bool headless, std::string outFilePath)
+ActionInitialization::ActionInitialization(G4bool headless, std::string outFilePath, std::vector<std::pair<G4String, G4double>> layersMap)
 : G4VUserActionInitialization(),
   fHeadless(true)
 {
   fHeadless = headless;
   fOutFilePath = outFilePath;
+  this->layersMap = layersMap;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -52,7 +53,7 @@ ActionInitialization::~ActionInitialization()
 
 void ActionInitialization::BuildForMaster() const
 {
-  RunAction* runAction = new RunAction(fHeadless, fOutFilePath);
+  RunAction* runAction = new RunAction(fHeadless, fOutFilePath, layersMap);
   SetUserAction(runAction);
 }
 
@@ -60,7 +61,7 @@ void ActionInitialization::BuildForMaster() const
 
 void ActionInitialization::Build() const
 {
-  RunAction* runAction = new RunAction(fHeadless, fOutFilePath);
+  RunAction* runAction = new RunAction(fHeadless, fOutFilePath, layersMap);
   SetUserAction(runAction);
   
   EventAction* eventAction = new EventAction(runAction);

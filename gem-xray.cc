@@ -27,7 +27,9 @@
 /// \file exampleB1.cc
 /// \brief Main program of the B1 example
 
+#include "DetectorConstruction.hh"
 #include "DetectorConstruction10x10.hh"
+#include "DetectorConstructionME0.hh"
 #include "ActionInitialization.hh"
 #include "PhysicsList.hh"
 
@@ -57,16 +59,15 @@ int main(int argc,char** argv)
   bool headless = true;
 
   string outFilePath = "";
+  string geometry = "custom10x10"; // 10x10, ME0 or custom
   if (argc == 1) {
     ui = new G4UIExecutive(argc, argv);
     headless = false;
-  } else if (argc == 3) {
-    if (string("test") == argv[2]) { // headless, but no output
-      headless = false;
-    } else { // headless, with output file
-      outFilePath = string(argv[2]);
-    }
+  } else if (argc >= 3) {
+    if (string("test") == argv[2]) headless = false; // headless, but no output
+    else outFilePath = string(argv[2]); // headless, with output file
   }
+  if (argc >= 4) geometry = string(argv[3]);
 
   // Choose the Random engine
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
@@ -82,7 +83,38 @@ int main(int argc,char** argv)
   // Set mandatory initialization classes
   //
   // Detector construction
-  runManager->SetUserInitialization(new DetectorConstruction10x10());
+
+  std::vector<std::pair<G4String, G4double>> exampleMaterialLayers;
+  if (string("custom")==geometry) {
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.0)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-2)));
+  } else if (string("custom10x10")==geometry) {
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3.0)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(125e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(3.0)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(5e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(5e-3)));
+  } else if (string("10x10")==geometry) {
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(125e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(3.0)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(5e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(5e-3)));
+  }
+  else if (string("ME0")==geometry) {
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3.0)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
+  }
+  runManager->SetUserInitialization(new DetectorConstruction(exampleMaterialLayers));
 
   // Physics list
   G4VModularPhysicsList* physicsList = new PhysicsList(); //new QBBC;
@@ -90,7 +122,7 @@ int main(int argc,char** argv)
   runManager->SetUserInitialization(physicsList);
     
   // User action initialization
-  runManager->SetUserInitialization(new ActionInitialization(headless, outFilePath));
+  runManager->SetUserInitialization(new ActionInitialization(headless, outFilePath, exampleMaterialLayers));
   
   // Initialize visualization
   //

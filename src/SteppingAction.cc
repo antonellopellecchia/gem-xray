@@ -43,6 +43,12 @@
 
 SteppingAction::SteppingAction(EventAction* eventAction):G4UserSteppingAction() {
   this->eventAction = eventAction;
+  this->layersMap = eventAction->layersMap;
+
+  //volumeBranchNames["WindowKaptonLogical"] = "window";
+  //volumeBranchNames["WindowCopperLogical"] = "copper1";
+  //volumeBranchNames["DriftKaptonLogical"] = "driftKapton";
+  //volumeBranchNames["DriftFr4Logical"] = "driftFr4";
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -56,42 +62,76 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   G4Track *track = step->GetTrack();
   G4int trackID = track->GetTrackID();
 
-  if (!windowKaptonVolume || !driftKaptonVolume || !driftCopperVolume) {
-    windowKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("WindowKaptonLogical");
-    driftKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftKaptonLogical");
-    driftCopperVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftCopperLogical");
+  //if (!windowKaptonVolume || !driftKaptonVolume || !driftCopperVolume) {
+  if (volumesBeforeDrift.size()==0) {
+    G4int materialIndex = 0;
+    for (auto materialNameThicknessPair:layersMap) {
+      G4String materialName = materialNameThicknessPair.first;
+      if (materialName==G4String("vacuum")) continue;
+      materialIndex++;
+      G4String logicalName = G4String("Logical")+materialName+std::to_string(materialIndex);
+      G4LogicalVolume *volume = G4LogicalVolumeStore::GetInstance()->GetVolume(logicalName);
+      //cout << volume << " " << (volume==NULL) << endl;
+      volumesBeforeDrift.push_back(volume);
+      volumeBranchNames.push_back(G4String(materialName+std::to_string(materialIndex)));
+    }
+    //windowKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("WindowKaptonLogical");
+    //windowCopperVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("WindowCopperLogical");
+    //driftKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftKaptonLogical");
+    //driftKaptonVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftFr4Logical");
+    //driftCopperVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftCopperLogical");
     driftGapVolume = G4LogicalVolumeStore::GetInstance()->GetVolume("DriftGapLogical");
   }
+
+  //cout << (driftKaptonVolume==NULL) << endl;
+  //cout << volumesBeforeDrift.size() << endl;
   
   G4LogicalVolume* volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
   G4String particleName = track->GetParticleDefinition()->GetParticleName();
   G4LogicalVolume *nextVolume = track->GetNextVolume()->GetLogicalVolume();
 
   if (step->IsLastStepInVolume() and particleName==G4String("gamma")) {
-    if (volume==windowKaptonVolume) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-    else if (volume==driftKaptonVolume) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-    else if (volume==driftCopperVolume) {
-      this->eventAction->AddHit("driftCopper", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
-      this->eventAction->TransportPhoton(
+    for (int i=0; i<volumesBeforeDrift.size()-1; i++) {
+      if (volume==volumesBeforeDrift[i])
+        this->eventAction->AddHit(volumeBranchNames[i], step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    }
+    //if (volume==windowKaptonVolume) this->eventAction->AddHit("window", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    //else if (volume==driftFr4Volume) this->eventAction->AddHit("driftFr4", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    //else if (volume==driftKaptonVolume) this->eventAction->AddHit("driftKapton", step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+    //if (volume==driftCopperVolume) {
+    if (volume==volumesBeforeDrift[volumesBeforeDrift.size()-1]) { // last volume before gas is always copper drit
+      //cout << track->GetCreatorProcess()->GetProcessName() << endl;
+      this->eventAction->AddHit(volumeBranchNames[volumeBranchNames.size()-1], step->GetPreStepPoint()->GetTotalEnergy()*1.e3);
+      this->eventAction->AddPhoton(
         step->GetPostStepPoint()->GetTotalEnergy()*1.e3,
         step->GetPostStepPoint()->GetPosition(),
         step->GetPostStepPoint()->GetMomentumDirection()
       );
+      //cout << step->GetPreStepPoint()->GetPosition() << " ";
+      //cout << step->GetPostStepPoint()->GetPosition() << endl;
     }
   } else if (step->IsFirstStepInVolume() and volume==driftGapVolume) {
-    /*if (particleName==G4String("gamma")) {
-      /*this->eventAction->TransportPhoton(
-        step->GetPreStepPoint()->GetTotalEnergy()*1.e3,
-        step->GetPreStepPoint()->GetPosition(),
-        step->GetPreStepPoint()->GetMomentumDirection()
-      );
-    }else */if (particleName==G4String("e-")) {
-    this->eventAction->TransportDelta(
+    if (particleName!=G4String("gamma") and particleName!=G4String("e-")) {
+      cout << particleName << endl;
+    } else if (particleName==G4String("gamma")) {
+      //if (track->GetCreatorProcess()) cout << track->GetCreatorProcess()->GetProcessName() << endl;
+    } else if (particleName==G4String("e-")) {
+      //cout << track->GetCreatorProcess()->GetProcessName() << endl;
+      this->eventAction->AddElectron(
         step->GetPostStepPoint()->GetKineticEnergy()*1.e3,
         step->GetPostStepPoint()->GetPosition(),
         step->GetPostStepPoint()->GetMomentumDirection()
       );
+      //cout << step->GetPreStepPoint()->GetPosition() << " ";
+      //cout << step->GetPostStepPoint()->GetPosition() << endl;
     }
+  } else if (particleName==G4String("e-") and volume==driftCopperVolume) {
+      //cout << track->GetCreatorProcess()->GetProcessName() << endl;
+      /*this->eventAction->AddElectron(
+        step->GetPostStepPoint()->GetKineticEnergy()*1.e3,
+        step->GetPostStepPoint()->GetPosition(),
+        step->GetPostStepPoint()->GetMomentumDirection()
+      );*/
   }
 }
 

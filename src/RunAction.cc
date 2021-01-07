@@ -63,16 +63,29 @@ using namespace std;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-RunAction::RunAction(G4bool headless, string outFilePath): G4UserRunAction() {
+RunAction::RunAction(G4bool headless, string outFilePath, std::vector<std::pair<G4String, G4double>> layersMap): G4UserRunAction() {
   this->headless = headless;
   this->heedSimulation = new HeedSimulation(this);
+
+  this->layersMap = layersMap;
   
   if (this->headless) runFile = new TFile(outFilePath.c_str(), "RECREATE", "Simulation output ntuples");
 
-  for (G4String volume:volumes) {
-    hitEnergyMap[volume] = 0.;
-    treeMap[volume] = new TTree(volume, "");
-    treeMap[volume]->Branch("energy", &hitEnergyMap[volume], "energy/D");
+  if (volumeBranchNames.size()==0) {
+    volumeBranchNames.push_back(G4String("primary"));
+    G4int materialIndex = 0;
+    for (auto materialNameThicknessPair:layersMap) {
+      G4String materialName = materialNameThicknessPair.first;
+      if (materialName==G4String("vacuum")) continue;
+      materialIndex++;
+      volumeBranchNames.push_back(G4String(materialName+std::to_string(materialIndex)));
+    }
+    volumeBranchNames.push_back(G4String("conversion"));
+  }
+  for (G4String volumeBranchName:volumeBranchNames) {
+    hitEnergyMap[volumeBranchName] = 0.;
+    treeMap[volumeBranchName] = new TTree(volumeBranchName, "");
+    treeMap[volumeBranchName]->Branch("energy", &hitEnergyMap[volumeBranchName], "energy/D");
   }
   treeMap["conversion"]->Branch("primaries", &gasPrimaries, "primaries/D");
 }

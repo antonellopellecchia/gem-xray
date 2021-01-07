@@ -42,6 +42,7 @@
 
 EventAction::EventAction(RunAction* runAction): G4UserEventAction() {
   this->runAction = runAction;
+  this->layersMap = runAction->layersMap;
 } 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -51,9 +52,22 @@ EventAction::~EventAction() {}
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void EventAction::BeginOfEventAction(const G4Event *event) {
-  for (G4String volume:this->volumes) this->hitEnergies[volume] = new G4DataVector();
-  this->hitPositions["driftCopper"] = new vector<G4ThreeVector>();
-  this->hitMomenta["driftCopper"] = new vector<G4ThreeVector>();
+  if (volumeBranchNames.size()==0) {
+    G4int materialIndex = 0;
+    for (auto materialNameThicknessPair:layersMap) {
+      G4String materialName = materialNameThicknessPair.first;
+      if (materialName==G4String("vacuum")) continue;
+      materialIndex++;
+      volumeBranchNames.push_back(G4String(materialName+std::to_string(materialIndex)));
+    }
+  }
+
+  for (G4String volumeBranchName:this->volumeBranchNames) this->hitEnergies[volumeBranchName] = new G4DataVector();
+  this->hitPositions[volumeBranchNames[volumeBranchNames.size()-1]] = new vector<G4ThreeVector>();
+  this->hitMomenta[volumeBranchNames[volumeBranchNames.size()-1]] = new vector<G4ThreeVector>();
+
+  this->electrons = new vector<particle>(0);
+  this->photons = new vector<particle>(0);
 
   G4int eventID = event->GetEventID();
   if (eventID%10000 == 0) G4cout << eventID << "/" << runAction->nOfEvents << "\t\t" << G4endl;
@@ -69,18 +83,53 @@ void EventAction::EndOfEventAction(const G4Event* event) {
     volumeHitEnergies = it->second;
     for (G4double energy:*volumeHitEnergies) this->runAction->FillNtuples(volumeName, energy);
   }
+  int primaries = this->TransportPhotons()+this->TransportElectrons();
+  //int primaries = this->TransportPhotons();
+  if (primaries>20) this->runAction->FillNtuples("conversion", primaries/gasIonizationEnergy, primaries);
 }
 
 void EventAction::AddHit(G4String volume, G4double energy) {
   this->hitEnergies[volume]->push_back(energy);
 }
 
-void EventAction::TransportPhoton(G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
-  runAction->heedSimulation->TransportPhoton(this, energy, position, momentum);
+void EventAction::AddPhoton(G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
+  particle photon;
+  photon.energy = energy;
+  photon.position = position;
+  photon.momentum = momentum;
+  photons->push_back(photon);
 }
 
-void EventAction::TransportDelta(G4double kineticEnergy, G4ThreeVector position, G4ThreeVector momentum) {
-  if (kineticEnergy > 0.) runAction->heedSimulation->TransportDelta(this, kineticEnergy, position, momentum);
+int EventAction::TransportPhotons() {
+  int primaries = 0;
+  for (int i=0; i<photons->size(); i++) {
+    primaries += runAction->heedSimulation->TransportPhoton(this,
+      photons->at(i).energy,
+      photons->at(i).position,
+      photons->at(i).momentum
+    );
+  }
+  return primaries;
+}
+
+void EventAction::AddElectron(G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
+  particle electron;
+  electron.energy = energy;
+  electron.position = position;
+  electron.momentum = momentum;
+  electrons->push_back(electron);
+}
+
+int EventAction::TransportElectrons() {
+  int primaries = 0;
+  for (int i=0; i<electrons->size(); i++) {
+    primaries += runAction->heedSimulation->TransportElectron(this,
+      electrons->at(i).energy,
+      electrons->at(i).position,
+      electrons->at(i).momentum
+    );
+  }
+  return primaries;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

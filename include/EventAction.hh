@@ -49,6 +49,12 @@ class RunAction;
 /// Event action class
 ///
 
+struct particle { // needed to interface with HEED
+  G4double energy;
+  G4ThreeVector position;
+  G4ThreeVector momentum;
+};
+
 class EventAction : public G4UserEventAction
 {
 public:
@@ -59,17 +65,28 @@ public:
   virtual void EndOfEventAction(const G4Event* event);
 
   void AddHit(G4String volume, G4double energy);
-  void TransportPhoton(G4double energy, G4ThreeVector position, G4ThreeVector momentum);
-  void TransportDelta(G4double energy, G4ThreeVector position, G4ThreeVector momentum);
+  void AddPhoton(G4double energy, G4ThreeVector position, G4ThreeVector momentum);
+  void AddElectron(G4double energy, G4ThreeVector position, G4ThreeVector momentum);
+  int TransportPhotons();
+  int TransportElectrons();
 
+  std::vector<std::pair<G4String, G4double>> layersMap;
+  
 private:
   RunAction* runAction;
+
 
   map<string,G4DataVector*> hitEnergies;
   map<string,vector<G4ThreeVector>*> hitPositions;
   map<string,vector<G4ThreeVector>*> hitMomenta;
   
+  std::vector<G4String> volumeBranchNames;
   G4String volumes[3] = {"window", "driftKapton", "driftCopper"};
+
+  vector<particle> *electrons;
+  vector<particle> *photons;
+  
+  double gasIonizationEnergy = 31.2; // from previous HEED simulation
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

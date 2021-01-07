@@ -32,6 +32,8 @@
 
 #include "G4VUserDetectorConstruction.hh"
 #include "G4Material.hh"
+#include "G4String.hh"
+#include "G4Colour.hh"
 #include "globals.hh"
 
 class G4VPhysicalVolume;
@@ -42,25 +44,27 @@ class G4LogicalVolume;
 class DetectorConstruction : public G4VUserDetectorConstruction
 {
 public:
-  DetectorConstruction(G4int);
+  DetectorConstruction(std::vector<std::pair<G4String, G4double>>);
   virtual ~DetectorConstruction();
 
   virtual G4VPhysicalVolume* Construct();
 
   void ConstructMaterials();
     
-  G4LogicalVolume* GetCopper() const { return fCopperLogical; }
-  G4LogicalVolume* GetFR4() const { return fFR4Logical; }
-  G4LogicalVolume* GetCathode() const { return fCathodeLogical; }
+  //G4LogicalVolume* GetCopper() const { return fCopperLogical; }
+  //G4LogicalVolume* GetFR4() const { return fFR4Logical; }
+  //G4LogicalVolume* GetCathode() const { return fCathodeLogical; }
 
   G4Material *createFR4();  
 
 protected:
-  G4LogicalVolume *fCopperLogical;
-  G4LogicalVolume *fFR4Logical;
-  G4LogicalVolume *fCathodeLogical;
-
-  G4int fCopperThickness;
+  std::vector<std::pair<G4String, G4double>> materialLayers;
+  std::map<G4String, G4Material *> materialMap;
+  std::map<G4String, G4Colour> colorMap;
+  //G4LogicalVolume *fCopperLogical;
+  //G4LogicalVolume *fFR4Logical;
+  //G4LogicalVolume *fCathodeLogical;
+  //G4int fCopperThickness;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

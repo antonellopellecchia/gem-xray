@@ -24,13 +24,12 @@
 // ********************************************************************
 //
 //
-/// \file DetectorConstruction.cc
-/// \brief Implementation of the DetectorConstruction class
+/// \file DetectorConstructionME0.cc
+/// \brief Implementation of the DetectorConstructionME0 class
 
-#include "DetectorConstruction.hh"
+#include "DetectorConstructionME0.hh"
 
 #include "G4Material.hh"
-#include "G4String.hh"
 #include "G4Element.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
@@ -43,27 +42,19 @@
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4VisAttributes.hh"
-#include "G4Colour.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-DetectorConstruction::DetectorConstruction(std::vector<std::pair<G4String, G4double>> materialLayers):G4VUserDetectorConstruction() {
-  this->materialLayers = materialLayers;
-  colorMap["copper"] = G4Colour(0, 0, .8, .5);
-  colorMap["kapton"] = G4Colour(.8, 0, 0, .5);
-  colorMap["argon"] = G4Colour(1, 0, 0, 1);
-  colorMap["fr4"] = G4Colour(.8, 0, 0, .5);
-}
+DetectorConstructionME0::DetectorConstructionME0():G4VUserDetectorConstruction() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-DetectorConstruction::~DetectorConstruction()
+DetectorConstructionME0::~DetectorConstructionME0()
 { }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4VPhysicalVolume* DetectorConstruction::Construct()
+G4VPhysicalVolume* DetectorConstructionME0::Construct()
 {
   ConstructMaterials();
 
@@ -92,14 +83,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material *argon = G4Material::GetMaterial("G4_Ar");
 
   G4Material *fr4 = createFR4();
-
-  if (materialMap.size()==0) {
-    materialMap["copper"] = copper;
-    materialMap["kapton"] = kapton;
-    materialMap["pvc"] = pvc;
-    materialMap["argon"] = argon;
-    materialMap["fr4"] = fr4;
-  }
   
   // Get nist material manager
   G4NistManager* nist = G4NistManager::Instance();
@@ -112,22 +95,16 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double driftCopperThickness = 35*um;
   G4double driftGapThickness = 3*mm;
 
-  /*G4double copperThickness = fCopperThickness*um;
+  G4double copperThickness = fCopperThickness*um;
   G4double fr4Thickness = 3*mm;
   G4double cathodeThickness = 35*um;
-  G4double copperToFr4Distance = 30*cm-fCopperThickness;*/
+  G4double copperToFr4Distance = 30*cm-fCopperThickness;
 
   // maximum object size in xy
   G4double sizeXY = 10*mm;
   // envelope parameters
   G4double envSizeXY = 1.5*sizeXY;
-  G4double envSizeZ = 2*driftGapThickness;
-
-  for (auto materialNameThicknessPair:materialLayers) {
-    envSizeZ += materialNameThicknessPair.second*1.5;
-  }
-
-  //sourceToChamberZ+copperWindowThickness+gasThickness+driftFr4Thickness+driftCopperThickness+2*driftGapThickness;
+  G4double envSizeZ = sourceToChamberZ+copperWindowThickness+gasThickness+driftFr4Thickness+driftCopperThickness+2*driftGapThickness;
   
   // Option to switch on/off checking of volumes overlaps
   //
@@ -152,33 +129,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4LogicalVolume* logicEnv = new G4LogicalVolume(solidEnv, envMaterial, "Envelope");
   new G4PVPlacement(0, G4ThreeVector(), logicEnv, "Envelope", logicWorld, false, 0, checkOverlaps);
 
-  G4double layerPosition = -0.45*envSizeZ;
-  G4int materialIndex = 0;
-  for (auto materialNameThicknessPair:materialLayers) { // add all material layers
-    G4String materialName = materialNameThicknessPair.first;
-    G4double materialThickness = materialNameThicknessPair.second*mm;
-
-    if (materialName==G4String("vacuum")) { // just leave empty space 
-      layerPosition += materialThickness;
-      continue;
-    }
-    materialIndex++;
-    layerPosition += 0.5*materialThickness;
-
-    G4String boxName = G4String("Box")+materialName+std::to_string(materialIndex);
-    G4String logicalName = G4String("Logical")+materialName+std::to_string(materialIndex);
-    G4String physicalName = G4String("Physical")+materialName+std::to_string(materialIndex);
-
-    G4Box *box = new G4Box(boxName, 0.5*sizeXY, 0.5*sizeXY, 0.5*materialThickness);
-    G4LogicalVolume *logical = new G4LogicalVolume(box, materialMap[materialName], logicalName);
-    G4VisAttributes *visAttributes = new G4VisAttributes(colorMap[materialName]);
-    logical->SetVisAttributes(visAttributes);
-    new G4PVPlacement(0, G4ThreeVector(0.,0.,layerPosition), logical, physicalName, logicEnv, false, 0, checkOverlaps);
-
-    layerPosition += 0.5*materialThickness;
-  }
-
-  /*
   //
   // First copper layer, 35 um
   //
@@ -202,10 +152,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Box *driftCopperSolid = new G4Box("DriftCopperBox", 0.5*sizeXY, 0.5*sizeXY, 0.5*driftCopperThickness);
   G4LogicalVolume *driftCopperLogical = new G4LogicalVolume(driftCopperSolid, copper, "DriftCopperLogical");
   new G4PVPlacement(0, G4ThreeVector(0.,0.,driftCopperZ), driftCopperLogical, "DriftCopperPhysical", logicEnv, false, 0, checkOverlaps);
-  */
 
-  // Add gas gap, 3 mm argon (unused)
-  G4double driftGapZ = layerPosition + 0.5*driftGapThickness;
+  // Gas gap, 3 mm argon (unused)
+  G4double driftGapZ = driftCopperZ + 0.5*driftCopperThickness + 0.5*driftGapThickness;
   G4Box *driftGapSolid = new G4Box("DriftGapBox", 0.5*sizeXY, 0.5*sizeXY, 0.5*driftGapThickness);
   G4LogicalVolume *driftGapLogical = new G4LogicalVolume(driftGapSolid, argon, "DriftGapLogical");
   new G4PVPlacement(0, G4ThreeVector(0.,0.,driftGapZ), driftGapLogical, "DriftGapPhysical", logicEnv, false, 0, checkOverlaps);
@@ -213,7 +162,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   return physWorld;
 }
 
-G4Material *DetectorConstruction::createFR4() {
+G4Material *DetectorConstructionME0::createFR4() {
   G4int natoms, numel;
   G4double density, fractionMass;
 
@@ -238,7 +187,7 @@ G4Material *DetectorConstruction::createFR4() {
   return fr4;
 }
 
-void DetectorConstruction::ConstructMaterials() {
+void DetectorConstructionME0::ConstructMaterials() {
    auto nistManager = G4NistManager::Instance();
 
    // Air 

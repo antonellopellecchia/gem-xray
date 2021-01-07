@@ -7,7 +7,7 @@
 
 /run/initialize
 
-#/process/em/fluo true
-#/process/em/auger true
+/process/em/fluo true
+/process/em/auger true
 
 /run/beamOn 1000000
