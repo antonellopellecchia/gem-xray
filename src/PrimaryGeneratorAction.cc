@@ -155,12 +155,14 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   G4double size = 0.8;
   G4double x0 = size * envSizeXY * (G4UniformRand()-0.5);
   G4double y0 = size * envSizeXY * (G4UniformRand()-0.5);
-  G4double z0 = -0.5 * envSizeZ;
+  //G4double z0 = -0.5 * envSizeZ; // beam at beginning of environment
+  //G4double z0 = 0.; // beam at center of environment
+  G4double z0 = -0.15*envSizeZ;
 
   // gaussian positioning, center in (0,0), sigma 1 mm
   G4double beamSigma = 1.*mm;
   //G4double r0 = G4RandGauss::shoot(0, beamSigma);
-  //G4double theta0 = G4UniformRand()*CLHEP::pi;
+  
   //x0 = r0*cos(theta0);
   //y0 = r0*sin(theta0);
   //std::tuple<G4double, G4double> posBeginning = std::make_tuple(x0, y0);
@@ -171,7 +173,16 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   //x0 = G4RandGauss::shoot(0, beamSigma);
   //y0 = G4RandGauss::shoot(0, beamSigma);
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
+  //fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
+  
+  // G4double u = G4UniformRand()/4;
+  G4double u = G4UniformRand()*0.117; // 40° angle
+  G4double theta = std::acos(1-2*u);
+  G4double phi = G4UniformRand()*2*CLHEP::pi;
+  G4double directionX = std::sin(theta)*std::cos(phi);
+  G4double directionY = std::sin(theta)*std::sin(phi);
+  G4double directionZ = std::cos(theta);
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(directionX, directionY, directionZ));
 
   G4double particleEnergy = 0.;
   G4double partSumSpectrum = 0.;

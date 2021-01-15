@@ -28,6 +28,7 @@
 /// \brief Main program of the B1 example
 
 #include "DetectorConstruction.hh"
+#include "DetectorConstructionBox.hh"
 #include "DetectorConstruction10x10.hh"
 #include "DetectorConstructionME0.hh"
 #include "ActionInitialization.hh"
@@ -92,7 +93,7 @@ int main(int argc,char** argv)
     exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-2)));
   } else if (string("custom10x10")==geometry) {
-    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
+    exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(500)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3.0)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
@@ -114,7 +115,7 @@ int main(int argc,char** argv)
     exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3.0)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
   }
-  runManager->SetUserInitialization(new DetectorConstruction(exampleMaterialLayers));
+  runManager->SetUserInitialization(new DetectorConstructionBox(exampleMaterialLayers));
 
   // Physics list
   G4VModularPhysicsList* physicsList = new PhysicsList(); //new QBBC;
