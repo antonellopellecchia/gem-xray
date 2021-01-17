@@ -185,23 +185,29 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(directionX, directionY, directionZ));
 
   G4double particleEnergy = 0.;
-  G4double partSumSpectrum = 0.;
+  /*G4double partSumSpectrum = 0.;
   G4int j = 0;
   G4double random = primarySpectrumSum*G4UniformRand();
   while (partSumSpectrum<random) {
     partSumSpectrum += (*primarySpectrum)[j];
     j++;
   }
-  particleEnergy = (*primaryEnergies)[j];
+  particleEnergy = (*primaryEnergies)[j];*/
 
   /*
-  FOR Fe55 SPECTRUM
+  //FOR Fe55 SPECTRUM
   G4double particleEnergy = 0.;
   G4double energyRand = G4UniformRand();
   if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
   else particleEnergy = ironLineEnergies[1];
   */
-
+  
+  //FOR CD109 SPECTRUM
+  G4double particleEnergy = 0.;
+  G4double energyRand = G4UniformRand();
+  if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
+  else particleEnergy = ironLineEnergies[1];
+  
   fParticleGun->SetParticleEnergy(particleEnergy*keV);
   runAction->FillNtuples("primary", particleEnergy);
   

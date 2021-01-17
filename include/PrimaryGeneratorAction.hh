@@ -73,6 +73,11 @@ private:
 
   G4double ironLineEnergies[2] = {5.89, 6.49};
   G4double ironLineIntensities[2] = {0.87985866, 0.12014134};
+
+  //G4double cadmiumLineEnergies[3] = {3.1, 22.1, 25.0};
+  //G4double cadmiumLineIntensities[3] = {0.09256109569420821, 0.7483663056127473, 0.1590725986930445};
+  G4double cadmiumLineEnergies[2] = {22.1, 25.0};
+  G4double cadmiumLineIntensities[2] = {0.7483663056127473, 0.1590725986930445};
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
