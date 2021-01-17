@@ -184,8 +184,8 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   G4double directionZ = std::cos(theta);
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(directionX, directionY, directionZ));
 
-  G4double particleEnergy = 0.;
-  /*G4double partSumSpectrum = 0.;
+  /*G4double particleEnergy = 0.;
+  G4double partSumSpectrum = 0.;
   G4int j = 0;
   G4double random = primarySpectrumSum*G4UniformRand();
   while (partSumSpectrum<random) {
