@@ -60,7 +60,7 @@ int main(int argc,char** argv)
   bool headless = true;
 
   string outFilePath = "";
-  string geometry = "custom10x10"; // 10x10, ME0 or custom
+  string geometry = "10x10"; // 10x10, ME0 or custom
   if (argc == 1) {
     ui = new G4UIExecutive(argc, argv);
     headless = false;
