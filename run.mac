@@ -4,4 +4,4 @@
 /tracking/verbose 0
 
 /run/initialize
-/run/beamOn 10000000000
+/run/beamOn 1000000000
