@@ -53,6 +53,7 @@ EventAction::~EventAction() {}
 
 void EventAction::BeginOfEventAction(const G4Event *event) {
   if (volumeBranchNames.size()==0) {
+    volumeBranchNames.push_back(G4String("primary"));
     G4int materialIndex = 0;
     for (auto materialNameThicknessPair:fLayersMap) {
       G4String materialName = materialNameThicknessPair.first;

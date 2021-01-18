@@ -62,6 +62,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   G4Track *track = step->GetTrack();
   G4int trackID = track->GetTrackID();
 
+  if (track->GetCurrentStepNumber()==1 and trackID==1) eventAction->AddHit("primary", track->GetVertexKineticEnergy()*1e3);
+
   //if (!windowKaptonVolume || !driftKaptonVolume || !driftCopperVolume) {
   if (volumesBeforeDrift.size()==0) {
     G4int materialIndex = 0;
