@@ -45,7 +45,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-PrimaryGeneratorAction::PrimaryGeneratorAction(EventAction *eventAction)
+PrimaryGeneratorAction::PrimaryGeneratorAction(EventAction *eventAction, G4String source, bool headless)
   : G4VUserPrimaryGeneratorAction(),
     fParticleGun(0), 
     fEnvelopeBox(0),
@@ -57,7 +57,9 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(EventAction *eventAction)
 
   G4ParticleDefinition* particle = G4Gamma::Definition();
   fParticleGun->SetParticleDefinition(particle);
-
+  
+  fSource = source;
+  fHeadless = headless;
   /*this->energies = runAction->GetPrimaryEnergies();
   this->spectrum = runAction->GetPrimarySpectrum();
   this->sumSpectrum = runAction->GetPrimarySpectrumSum();*/
@@ -175,43 +177,46 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
   //fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
   
+  G4double directionX, directionY, directionZ;
   // G4double u = G4UniformRand()/4;
-  G4double u = G4UniformRand()*0.117; // 40° angle
-  G4double theta = std::acos(1-2*u);
-  G4double phi = G4UniformRand()*2*CLHEP::pi;
-  G4double directionX = std::sin(theta)*std::cos(phi);
-  G4double directionY = std::sin(theta)*std::sin(phi);
-  G4double directionZ = std::cos(theta);
+  if (fSource==G4String("xray")) {
+    G4double u = G4UniformRand()*0.117; // 40° angle
+    G4double theta = std::acos(1-2*u);
+    G4double phi = G4UniformRand()*2*CLHEP::pi;
+    directionX = std::sin(theta)*std::cos(phi);
+    directionY = std::sin(theta)*std::sin(phi);
+    directionZ = std::cos(theta);
+  } else {
+    directionX = 0.;
+    directionY = 0.;
+    directionZ = 1.;
+  }
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(directionX, directionY, directionZ));
 
-  /*G4double particleEnergy = 0.;
-  G4double partSumSpectrum = 0.;
-  G4int j = 0;
-  G4double random = primarySpectrumSum*G4UniformRand();
-  while (partSumSpectrum<random) {
-    partSumSpectrum += (*primarySpectrum)[j];
-    j++;
+  G4double particleEnergy = 0.;
+  if (fSource==G4String("xray")) {
+    G4double partSumSpectrum = 0.;
+    G4int j = 0;
+    G4double random = primarySpectrumSum*G4UniformRand();
+    while (partSumSpectrum<random) {
+      partSumSpectrum += (*primarySpectrum)[j];
+      j++;
+    }
+    particleEnergy = (*primaryEnergies)[j];
+  } else if (fSource==G4String("fe55")) {
+    G4double energyRand = G4UniformRand();
+    if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
+    else particleEnergy = ironLineEnergies[1];
+  } else if (fSource==G4String("cd109")) {
+    G4double energyRand = G4UniformRand();
+    if (energyRand<=this->cadmiumLineIntensities[0]) particleEnergy = cadmiumLineEnergies[0];
+    else particleEnergy = cadmiumLineEnergies[1];
   }
-  particleEnergy = (*primaryEnergies)[j];*/
 
-  /*
-  //FOR Fe55 SPECTRUM
-  G4double particleEnergy = 0.;
-  G4double energyRand = G4UniformRand();
-  if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
-  else particleEnergy = ironLineEnergies[1];
-  */
-  
-  //FOR CD109 SPECTRUM
-  G4double particleEnergy = 0.;
-  G4double energyRand = G4UniformRand();
-  if (energyRand<=this->ironLineIntensities[0]) particleEnergy = ironLineEnergies[0];
-  else particleEnergy = ironLineEnergies[1];
-  
   fParticleGun->SetParticleEnergy(particleEnergy*keV);
-  runAction->FillNtuples("primary", particleEnergy);
-  
   fParticleGun->GeneratePrimaryVertex(anEvent);
+
+  //runAction->FillNtuples("primary", particleEnergy);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

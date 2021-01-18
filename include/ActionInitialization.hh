@@ -36,12 +36,14 @@
 #include <string>
 #include <vector>
 
+using std::string;
+
 /// Action initialization class.
 
 class ActionInitialization : public G4VUserActionInitialization
 {
 public:
-  ActionInitialization(bool headless, std::string outFilePath, std::vector<std::pair<G4String, G4double>> layersMap);
+  ActionInitialization(bool headless, string outFilePath, string source, std::vector<std::pair<G4String, G4double>> layersMap);
   virtual ~ActionInitialization();
 
   virtual void BuildForMaster() const;
@@ -49,8 +51,9 @@ public:
 
 private:
   bool fHeadless;
-  std::string fOutFilePath;
-  std::vector<std::pair<G4String, G4double>> layersMap;
+  string fOutFilePath;
+  string fSource;
+  std::vector<std::pair<G4String, G4double>> fLayersMap;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -43,7 +43,7 @@
 
 SteppingAction::SteppingAction(EventAction* eventAction):G4UserSteppingAction() {
   this->eventAction = eventAction;
-  this->layersMap = eventAction->layersMap;
+  fLayersMap = eventAction->fLayersMap;
 
   //volumeBranchNames["WindowKaptonLogical"] = "window";
   //volumeBranchNames["WindowCopperLogical"] = "copper1";
@@ -65,7 +65,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   //if (!windowKaptonVolume || !driftKaptonVolume || !driftCopperVolume) {
   if (volumesBeforeDrift.size()==0) {
     G4int materialIndex = 0;
-    for (auto materialNameThicknessPair:layersMap) {
+    for (auto materialNameThicknessPair:fLayersMap) {
       G4String materialName = materialNameThicknessPair.first;
       if (materialName==G4String("vacuum")) continue;
       materialIndex++;

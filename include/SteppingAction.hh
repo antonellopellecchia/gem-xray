@@ -59,7 +59,7 @@ private:
   G4LogicalVolume* driftCopperVolume;
   G4LogicalVolume* driftGapVolume;
 
-  std::vector<std::pair<G4String, G4double>> layersMap;
+  std::vector<std::pair<G4String, G4double>> fLayersMap;
   std::vector<G4LogicalVolume *> volumesBeforeDrift;
   std::vector<G4String> volumeBranchNames;
   /*std::map<std::string, std::string> volumeBranchNames;

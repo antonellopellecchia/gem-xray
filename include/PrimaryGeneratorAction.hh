@@ -32,6 +32,7 @@
 
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
+#include "G4String.hh"
 #include "globals.hh"
 
 #include "RunAction.hh"
@@ -49,7 +50,7 @@ class G4Box;
 class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 {
 public:
-  PrimaryGeneratorAction(EventAction *eventAction);    
+  PrimaryGeneratorAction(EventAction *eventAction, G4String source, bool headless);    
   virtual ~PrimaryGeneratorAction();
 
   // method from the base class
@@ -66,6 +67,9 @@ private:
   G4Box*                fCopperBox;
   EventAction*          fEventAction;
   RunAction* runAction;
+
+  bool fHeadless;
+  G4String fSource;
 
   G4DataVector *primaryEnergies;
   G4DataVector *primarySpectrum;

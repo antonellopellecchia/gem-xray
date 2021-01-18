@@ -42,7 +42,7 @@
 
 EventAction::EventAction(RunAction* runAction): G4UserEventAction() {
   this->runAction = runAction;
-  this->layersMap = runAction->layersMap;
+  fLayersMap = runAction->fLayersMap;
 } 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -54,7 +54,7 @@ EventAction::~EventAction() {}
 void EventAction::BeginOfEventAction(const G4Event *event) {
   if (volumeBranchNames.size()==0) {
     G4int materialIndex = 0;
-    for (auto materialNameThicknessPair:layersMap) {
+    for (auto materialNameThicknessPair:fLayersMap) {
       G4String materialName = materialNameThicknessPair.first;
       if (materialName==G4String("vacuum")) continue;
       materialIndex++;

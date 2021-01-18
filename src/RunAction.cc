@@ -59,35 +59,15 @@
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 
-using namespace std;
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 RunAction::RunAction(G4bool headless, string outFilePath, std::vector<std::pair<G4String, G4double>> layersMap): G4UserRunAction() {
   this->headless = headless;
   this->heedSimulation = new HeedSimulation(this);
+  fLayersMap = layersMap;
+  fHitEnergyMap = new std::map<G4String, G4double>();
 
-  this->layersMap = layersMap;
-  
-  if (this->headless) runFile = new TFile(outFilePath.c_str(), "RECREATE", "Simulation output ntuples");
-
-  if (volumeBranchNames.size()==0) {
-    volumeBranchNames.push_back(G4String("primary"));
-    G4int materialIndex = 0;
-    for (auto materialNameThicknessPair:layersMap) {
-      G4String materialName = materialNameThicknessPair.first;
-      if (materialName==G4String("vacuum")) continue;
-      materialIndex++;
-      volumeBranchNames.push_back(G4String(materialName+std::to_string(materialIndex)));
-    }
-    volumeBranchNames.push_back(G4String("conversion"));
-  }
-  for (G4String volumeBranchName:volumeBranchNames) {
-    hitEnergyMap[volumeBranchName] = 0.;
-    treeMap[volumeBranchName] = new TTree(volumeBranchName, "");
-    treeMap[volumeBranchName]->Branch("energy", &hitEnergyMap[volumeBranchName], "energy/D");
-  }
-  treeMap["conversion"]->Branch("primaries", &gasPrimaries, "primaries/D");
+  runFile = new TFile(outFilePath.c_str(), "RECREATE", "Simulation output ntuples");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -99,6 +79,24 @@ RunAction::~RunAction() {}
 void RunAction::BeginOfRunAction(const G4Run* run) {
   // inform the runManager to save random number seed
   G4RunManager::GetRunManager()->SetRandomNumberStore(false);
+
+  if (volumeBranchNames.size()==0) {
+    volumeBranchNames.push_back(G4String("primary"));
+    G4int materialIndex = 0;
+    for (auto materialNameThicknessPair:fLayersMap) {
+      G4String materialName = materialNameThicknessPair.first;
+      if (materialName==G4String("vacuum")) continue;
+      materialIndex++;
+      volumeBranchNames.push_back(G4String(materialName+std::to_string(materialIndex)));
+    }
+    volumeBranchNames.push_back(G4String("conversion"));
+  }
+  for (G4String volumeBranchName:volumeBranchNames) {
+    (*fHitEnergyMap)[volumeBranchName] = 0.;
+    treeMap[volumeBranchName] = new TTree(volumeBranchName, "");
+    treeMap[volumeBranchName]->Branch("energy", &((*fHitEnergyMap)[volumeBranchName]), "energy/D");
+  }
+  treeMap["conversion"]->Branch("primaries", &gasPrimaries, "primaries/D");
 
   nOfEvents = run->GetNumberOfEventToBeProcessed();
   G4cout << G4endl;
@@ -128,22 +126,20 @@ void RunAction::EndOfRunAction(const G4Run* run) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void RunAction::FillNtuples(G4String volume, G4double energy) {
-  if (this->headless) {
-    hitEnergyMap[volume] = energy;
-    treeMap[volume]->Fill();
-  }
+  (*fHitEnergyMap)[volume] = energy;
+  treeMap[volume]->Fill();
 }
 
 void RunAction::FillNtuples(G4String volume, G4double energy, G4int primaries) {
   if (this->headless) {
-    hitEnergyMap[volume] = energy;
+    (*fHitEnergyMap)[volume] = energy;
     gasPrimaries = primaries;
     treeMap[volume]->Fill();
   }
 }
 
 void RunAction::FillNtuples(G4String volume, G4double energy, G4ThreeVector position, G4ThreeVector momentum) {
-  hitEnergyMap[volume] = energy;
+  (*fHitEnergyMap)[volume] = energy;
 
   hitPositionX = position.getX();
   hitPositionY = position.getY();

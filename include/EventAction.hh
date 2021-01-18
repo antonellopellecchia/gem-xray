@@ -70,7 +70,7 @@ public:
   int TransportPhotons();
   int TransportElectrons();
 
-  std::vector<std::pair<G4String, G4double>> layersMap;
+  std::vector<std::pair<G4String, G4double>> fLayersMap;
   
 private:
   RunAction* runAction;

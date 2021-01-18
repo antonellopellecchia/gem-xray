@@ -33,15 +33,18 @@
 #include "EventAction.hh"
 #include "SteppingAction.hh"
 
+using std::string;
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-ActionInitialization::ActionInitialization(G4bool headless, std::string outFilePath, std::vector<std::pair<G4String, G4double>> layersMap)
+ActionInitialization::ActionInitialization(G4bool headless, string outFilePath, string source, std::vector<std::pair<G4String, G4double>> layersMap)
 : G4VUserActionInitialization(),
   fHeadless(true)
 {
   fHeadless = headless;
   fOutFilePath = outFilePath;
-  this->layersMap = layersMap;
+  fSource = source;
+  fLayersMap = layersMap;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -53,7 +56,7 @@ ActionInitialization::~ActionInitialization()
 
 void ActionInitialization::BuildForMaster() const
 {
-  RunAction* runAction = new RunAction(fHeadless, fOutFilePath, layersMap);
+  RunAction* runAction = new RunAction(fHeadless, fOutFilePath, fLayersMap);
   SetUserAction(runAction);
 }
 
@@ -61,13 +64,13 @@ void ActionInitialization::BuildForMaster() const
 
 void ActionInitialization::Build() const
 {
-  RunAction* runAction = new RunAction(fHeadless, fOutFilePath, layersMap);
+  RunAction* runAction = new RunAction(fHeadless, fOutFilePath, fLayersMap);
   SetUserAction(runAction);
   
   EventAction* eventAction = new EventAction(runAction);
   SetUserAction(eventAction);
 
-  SetUserAction(new PrimaryGeneratorAction(eventAction));
+  SetUserAction(new PrimaryGeneratorAction(eventAction, fSource, fHeadless));
   
   SetUserAction(new SteppingAction(eventAction));
 }  

@@ -48,7 +48,9 @@
 
 #include "Randomize.hh"
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::string;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -57,19 +59,22 @@ int main(int argc,char** argv)
   // Detect interactive mode (if no arguments) and define UI session
   //
   G4UIExecutive* ui = 0;
+
   bool headless = true;
-
-  string outFilePath = "";
-  string geometry = "10x10"; // 10x10, ME0 or custom
-  if (argc == 1) {
-    ui = new G4UIExecutive(argc, argv);
-    headless = false;
-  } else if (argc >= 3) {
-    if (string("test") == argv[2]) headless = false; // headless, but no output
-    else outFilePath = string(argv[2]); // headless, with output file
+  string argRun = "run1.mac"; // command file with .mac extension
+  string argOut = "temp.root";
+  string argGeometry = "10x10"; // 10x10, ME0 or custom
+  string argSource = "xray"; // fe55, cd109 or xray
+  for (int iarg=0; iarg<argc; iarg++) {
+    string argString = string(argv[iarg]);
+    if (argString=="--gui") headless = false;
+    else if (argString=="--run") argRun = string(argv[iarg+1]);
+    else if (argString=="--out") argOut = string(argv[iarg+1]);
+    else if (argString=="--geometry") argGeometry = string(argv[iarg+1]);
+    else if (argString=="--spectrum") argSource = string(argv[iarg+1]);
   }
-  if (argc >= 4) geometry = string(argv[3]);
 
+  if (!headless) ui = new G4UIExecutive(argc, argv);
   // Choose the Random engine
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
   
@@ -86,13 +91,13 @@ int main(int argc,char** argv)
   // Detector construction
 
   std::vector<std::pair<G4String, G4double>> exampleMaterialLayers;
-  if (string("custom")==geometry) {
+  if (string("custom")==argGeometry) {
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.0)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-2)));
-  } else if (string("custom10x10")==geometry) {
+  } else if (string("custom10x10")==argGeometry) {
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(500)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3.0)));
@@ -102,14 +107,14 @@ int main(int argc,char** argv)
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(3.0)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(5e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(5e-3)));
-  } else if (string("10x10")==geometry) {
+  } else if (string("10x10")==argGeometry) {
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(125e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(3.0)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("kapton"),G4double(5e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(5e-3)));
   }
-  else if (string("ME0")==geometry) {
+  else if (string("ME0")==argGeometry) {
     exampleMaterialLayers.push_back(std::make_pair(G4String("vacuum"),G4double(1.5)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("copper"),G4double(35e-3)));
     exampleMaterialLayers.push_back(std::make_pair(G4String("fr4"),G4double(3.0)));
@@ -123,7 +128,7 @@ int main(int argc,char** argv)
   runManager->SetUserInitialization(physicsList);
     
   // User action initialization
-  runManager->SetUserInitialization(new ActionInitialization(headless, outFilePath, exampleMaterialLayers));
+  runManager->SetUserInitialization(new ActionInitialization(headless, argOut, argSource, exampleMaterialLayers));
   
   // Initialize visualization
   //
@@ -140,7 +145,7 @@ int main(int argc,char** argv)
   if ( ! ui ) { 
     // batch mode
     G4String command = "/control/execute ";
-    G4String fileName = argv[1];
+    G4String fileName = argRun;
     UImanager->ApplyCommand(command+fileName);
   }
   else { 

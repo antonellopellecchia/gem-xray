@@ -44,14 +44,16 @@
 #include <vector>
 #include <map>
 
-using namespace std;
+using std::map;
+using std::vector;
+using std::string;
 
 class G4Run;
 class HeedSimulation;
 
 class RunAction:public G4UserRunAction {
 public:
-  RunAction(bool headless, string outFilePath, std::vector<std::pair<G4String, G4double>>);
+  RunAction(bool headless, string outFilePath, vector<std::pair<G4String, G4double>>);
   virtual ~RunAction();
 
   // virtual G4Run* GenerateRun();
@@ -73,7 +75,7 @@ public:
   G4DataVector *primaryAngles;
   G4DataVector *primaryAngularDist;
   G4double primaryAngularDistSum;*/
-  std::vector<std::pair<G4String, G4double>> layersMap;
+  vector<std::pair<G4String, G4double>> fLayersMap;
 
 private:
 
@@ -86,7 +88,7 @@ private:
   bool headless = false;
 
   // variables for ntuples
-  map<G4String, G4double> hitEnergyMap;
+  map<G4String, G4double> *fHitEnergyMap;
   
   G4double gasPrimaries;
 
@@ -99,7 +101,7 @@ private:
   G4double hitMomentumZ;
 
   map<G4String, TTree*> treeMap;
-  std::vector<G4String> volumeBranchNames;
+  vector<G4String> volumeBranchNames;
   G4String volumes[6] = {"primary", "window", "driftKapton", "driftFr4", "driftCopper", "conversion"};
 };
 
